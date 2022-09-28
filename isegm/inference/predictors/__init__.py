@@ -1,11 +1,8 @@
-from .cdnet import DiffisionPredictor
 from .baseline import BaselinePredictor
 from .focalclick import FocalPredictor
 from .brs import InputBRSPredictor, FeatureBRSPredictor, HRNetFeatureBRSPredictor
 from .brs_functors import InputOptimizer, ScaleBiasOptimizer
 from isegm.inference.transforms import ZoomIn
-from isegm.model.is_hrnet_model import HRNetModel
-
 
 def get_predictor(net, brs_mode, device,
                   prob_thresh=0.49,
@@ -46,12 +43,7 @@ def get_predictor(net, brs_mode, device,
         if predictor_params is not None:
             predictor_params_.update(predictor_params)
         predictor = BaselinePredictor(net, device, zoom_in=zoom_in, with_flip=with_flip, infer_size =infer_size, **predictor_params_)
-    
-    elif brs_mode == 'CDNet':
-        if predictor_params is not None:
-            predictor_params_.update(predictor_params)
-        predictor = DiffisionPredictor(net, device, zoom_in=zoom_in, with_flip=with_flip, infer_size =infer_size, **predictor_params_)
-    
+        
     elif brs_mode == 'FocalClick':
         if predictor_params is not None:
             predictor_params_.update(predictor_params)
@@ -83,11 +75,7 @@ def get_predictor(net, brs_mode, device,
                                          optimizer_params=lbfgs_params_,
                                          **brs_opt_func_params)
 
-        if isinstance(net, HRNetModel):
-            FeaturePredictor = HRNetFeatureBRSPredictor
-            insertion_mode = {'after_c4': 'A', 'after_aspp': 'A', 'after_deeplab': 'C'}[insertion_mode]
-        else:
-            FeaturePredictor = FeatureBRSPredictor
+        FeaturePredictor = FeatureBRSPredictor
 
         predictor = FeaturePredictor(net, device,
                                      opt_functor=opt_functor,
