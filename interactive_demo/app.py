@@ -62,7 +62,10 @@ class InteractiveDemoApp(ttk.Frame):
             'prob_thresh': tk.DoubleVar(value=0.5),
             'lbfgs_max_iters': tk.IntVar(value=20),
 
+            'brush_size': tk.IntVar(value=1), # Initialize brush size to 1
+
             'alpha_blend': tk.DoubleVar(value=0.5),
+            'is_positive': tk.BooleanVar(value=True),
             'click_radius': tk.IntVar(value=3),
         }
 
@@ -163,6 +166,11 @@ class InteractiveDemoApp(ttk.Frame):
         FocusHorizontalScale(self.prob_thresh_frame, from_=0.0, to=1.0, command=self._update_prob_thresh,
                              variable=self.state['prob_thresh']).pack(padx=10)
 
+        self.brush_size_frame = FocusLabelFrame(master, text="Brush Size")
+        self.brush_size_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
+        FocusHorizontalScale(self.brush_size_frame, from_=1, to=20, resolution=1, command=self._update_brush_size,
+                             variable=self.state['brush_size']).pack(padx=10)
+
         self.alpha_blend_frame = FocusLabelFrame(master, text="Alpha blending coefficient")
         self.alpha_blend_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
         FocusHorizontalScale(self.alpha_blend_frame, from_=0.0, to=1.0, command=self._update_blend_alpha,
@@ -172,6 +180,12 @@ class InteractiveDemoApp(ttk.Frame):
         self.click_radius_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
         FocusHorizontalScale(self.click_radius_frame, from_=0, to=7, resolution=1, command=self._update_click_radius,
                              variable=self.state['click_radius']).pack(padx=10, anchor=tk.CENTER)
+
+        self.toggle_brush_button = \
+            FocusButton(self.clicks_options_frame, text='Toggle Brush', bg='#ea9999', fg='black', width=10, height=2,
+                        state=tk.NORMAL, command=self._toggle_brush)
+        self.toggle_brush_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
+
 
     def _load_image_callback(self):
         self.menubar.focus_set()
@@ -244,6 +258,9 @@ class InteractiveDemoApp(ttk.Frame):
         if self.controller.is_incomplete_mask:
             self.controller.prob_thresh = self.state['prob_thresh'].get()
             self._update_image()
+            
+    def _update_brush_size(self, value):
+        self.state['brush_size'] = tk.IntVar(value)
 
     def _update_blend_alpha(self, value):
         self._update_image()
@@ -253,6 +270,9 @@ class InteractiveDemoApp(ttk.Frame):
             return
 
         self._update_image()
+
+    def _toggle_brush(self):
+        self.state['is_positive'] = not self.state['is_positive']
 
     def _change_brs_mode(self, *args):
         if self.state['brs_mode'].get() == 'NoBRS':
@@ -319,7 +339,7 @@ class InteractiveDemoApp(ttk.Frame):
             return
 
         if self._check_entry(self):
-            self.controller.draw_brush(x, y, is_positive)
+            self.controller.draw_brush(x, y, self.state['is_positive'], (self.state['brush_size'].get()))
 
     def _end_brush_stroke_callback(self):
         self.controller.end_brush_stroke()

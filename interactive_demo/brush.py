@@ -10,7 +10,9 @@ class Brushstroke:
         self.img_h, self.img_w = img_shape
         self._coords = None
         self._prev_coords = None
-        self._fit_curve_p = None
+        self._fit_curve_p_left = None
+        self._fit_curve_p_right = None
+        self._fit_curve_extremal_point = None   # (x,y) of local minimum or maximum
         self._fit_reflect_yx = False
 
     def add_point(self, coords):
@@ -40,7 +42,7 @@ class Brushstroke:
         fit_xy[1] = self._prev_coords[::-1] if self._fit_reflect_yx else self._prev_coords
         fit_xy[2] = self._coords[::-1] if self._fit_reflect_yx else self._coords
 
-        if self._fit_curve_p is None:
+        if self._fit_curve_p_left is None or self._fit_curve_p_right is None:
             rank = 1
         else:
             # Add a point near the previous x along the last curve
@@ -84,15 +86,42 @@ class Brushstroke:
         fit_xy = np.sort(fit_xy)
 
         # Fit the new curve
-        self._fit_curve_p = P.fit(fit_xy['x'], fit_xy['y'], rank)
+        self._fit_curve_p_left = P.fit(fit_xy['x'], fit_xy['y'], rank)
+        self._fit_curve_p_right = self._fit_curve_p_left
 
         # Get the domain of the brush stroke (all x integer values between the two original points)
         coord_x_index = 1 if self._fit_reflect_yx else 0
         x_min, x_max = sorted((self._prev_coords[coord_x_index], self._coords[coord_x_index]))
         domain_space = np.linspace(start=x_min, stop=x_max, num=x_max-x_min+1)
 
+        # Make sure the local min or max is reasonable
+        x_at_min_max = [x for x in self._fit_curve_p_left.deriv().roots() if x_min<=x<=x_max]
+        if len(x_at_min_max) == 1:
+            self._fit_curve_extremal_point = (x_at_min_max, self._fit_curve_p_left(*x_at_min_max))
+        else:
+            self._fit_curve_extremal_point = None
+        if self._fit_curve_extremal_point is not None:
+            points_y_min, points_y_max = np.min(fit_xy['y']), np.max(fit_xy['y'])
+            points_y_span = points_y_max - points_y_min
+            curve_y_sorted = sorted((self._fit_curve_extremal_point[1], *fit_xy['y']))
+            curve_y_min, curve_y_max = curve_y_sorted[0], curve_y_sorted[-1]
+            curve_y_span = curve_y_max - curve_y_min
+            curve_y_span_limit = points_y_span * 1.5 + 1
+            compression_ratio = curve_y_span_limit / curve_y_span
+            if compression_ratio < 1:
+                min_x, max_x = fit_xy['x'][0], fit_xy['x'][-1]
+                mid_x = self._fit_curve_extremal_point
+                extremal_val = self._fit_curve_extremal_point[1]
+                self._compress_poly_vertically(start_x=min_x, end_x=mid_x, mid_y=mid_y,
+                                               extremal_val=extremal_val, ratio=compression_ratio,
+                                               side="left")
+                self._compress_poly_vertically(start_x=mid_x, end_x=max_x, mid_y=mid_y,
+                                               extremal_val=extremal_val, ratio=compression_ratio,
+                                               side="right")
+
         # Evaluate the polynomial at each x value in the domain to get an array of [y,x] vertices
         line_fitx = self._eval_poly(domain_space)
+
         vertices = np.array(list(zip(line_fitx, domain_space)))
 
         # Ensure all pixels along the brush stroke are accounted for in the vertices
@@ -119,43 +148,6 @@ class Brushstroke:
         if len(new_vertices) > 0:
             vertices = np.append(vertices, new_vertices, axis=0)
 
-        with open('log.txt', 'a') as file:
-            sys.stdout = file
-            #print(str(self._fit_curve_p).replace('·', '').replace('¹', '').replace('²', '^2'))
-            print("REFLECTED" if self._fit_reflect_yx else "NOT REFLECTED")
-            if len(vertices) == 0:
-                print(f"Current point: {self._coords}")
-            if np.min(vertices) < 0 or np.max(vertices) > 959 or np.min(np.flip(vertices, 1)) < 0 or np.max(np.flip(vertices, 1)) > 959:
-                print(f"Warning: vertices may be out of bounds:{vertices}")
-            if len(vertices) == 0:
-                print("Warning: no vertices found")
-            print(f" p_1 = {fit_xy[0]}")
-            print(f" p_2 = {fit_xy[1]}")
-            if rank == 2:
-                print(f" p_3 = {fit_xy[2]}")
-                min_x = min(self._coords[0], self._prev_coords[0])
-                max_x = max(self._coords[0], self._prev_coords[0])
-                min_y = min(self._coords[1], self._prev_coords[1])
-                max_y = max(self._coords[1], self._prev_coords[1])
-                span_x = abs(max_x - min_x) + 1
-                span_y = abs(max_y - min_y) + 1
-                x_space = np.linspace(start=min_x, stop=max_x, num=max_x-min_x+1)
-                y_space = np.linspace(start=min_y, stop=max_y, num=max_y-min_y+1)
-                if self._fit_reflect_yx:
-                    min_x, min_y = min_y, min_x
-                    max_x, max_y = max_y, max_x
-                    x_space, y_space = y_space.copy(), x_space.copy()
-                min_x_vert = np.min(vertices[:,1])
-                max_x_vert = np.max(vertices[:,1])
-                min_y_vert = np.min(vertices[:,0])
-                max_y_vert = np.max(vertices[:,0])
-                span_x_vert = abs(max_x_vert - min_x_vert) + 1
-                span_y_vert = abs(max_y_vert - min_y_vert) + 1
-                if max(max(span_x/span_x_vert, span_x_vert/span_x), max(span_y/span_y_vert, span_y_vert/span_y)) > 2:
-                    print(f"Warning: span of vertices is too large: \n{vertices}")
-                print("*********************************************************")
-        sys.stdout = sys.__stdout__
-
         # Ensure each row of vertices is in the form [x, y] relative to the image
         vertices = vertices if self._fit_reflect_yx else np.flip(vertices, 1)
 
@@ -166,4 +158,19 @@ class Brushstroke:
 
     def _eval_poly(self, x):
         """Evaluate the polynomial at x."""
-        return self._fit_curve_p(x)
+        """
+        if self._fit_curve_extremal_point is not None and x < self._fit_curve_extremal_point[0]:
+            result = self._fit_curve_p_left(x)
+        else:
+            result = self._fit_curve_p_right(x)
+        return result
+        """
+        return self._fit_curve_p_left(x)
+
+    def _compress_poly_vertically(self, start_x, end_x, mid_y, extremal_val, ratio, side):
+        p = self._fit_curve_p_left.copy() if side=="left" else self._fit_curve_p_right.copy()
+        compressor = np.zeros((3,), dtype=[('x', np.float64), ('y', np.float64)])
+
+        compressor['x'] = [start_x, end_x, 2*end_x-start_x]
+        midpoint_ratio = (mid_y * (1 - ratio) + extremal_val * ratio) / 2
+        compressor['y'] = [1, midpoint_ratio, 1]
