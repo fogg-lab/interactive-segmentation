@@ -3,6 +3,7 @@
 Code from https://github.com/Tramac/Lightweight-Segmentation/blob/master/light/model/base_model/efficientnet.py
 '''
 import torch.nn as nn
+from isegm.model.modeling.mobilenet.mobilenetv3_backbone import Identity
 
 
 

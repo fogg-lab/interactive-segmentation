@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 
 from isegm.inference.transforms import SigmoidForPred, LimitLongestSide, ResizeTrans
+from isegm.utils.crop_local import map_point_in_bbox
 
 class BaselinePredictor(object):
     def __init__(self, model, device,
