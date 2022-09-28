@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from torchvision import transforms
 from isegm.inference.transforms import AddHorizontalFlip, SigmoidForPred, LimitLongestSide, ResizeTrans
+from isegm.utils.crop_local import  map_point_in_bbox
 
 class BasePredictor(object):
     def __init__(self, model, device,
@@ -112,8 +113,6 @@ class BasePredictor(object):
             progress_mode = True
         else:
             progress_mode = False
-
-        y1,y2,x1,x2 = get_focus_bbox_v5(coarse_mask_np,prev_mask_np, global_roi,last_y,last_x, 1.4, 0)
 
         if progress_mode:
             coarse_mask = self.prev_prediction

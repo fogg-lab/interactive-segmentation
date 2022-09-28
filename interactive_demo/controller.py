@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from tkinter import messagebox
 
+from interactive_demo.brush import Brushstroke
 from isegm.inference import clicker
 from isegm.inference.predictors import get_predictor
 from isegm.utils.vis import draw_with_blend_and_clicks
@@ -12,6 +13,8 @@ class InteractiveController:
         self.net = net
         self.prob_thresh = prob_thresh
         self.clicker = clicker.Clicker()
+        self.brush_stroke = None
+
         self.states = []
         self.probs_history = []
         self.object_count = 0
@@ -48,7 +51,7 @@ class InteractiveController:
     def add_click(self, x, y, is_positive):
         self.states.append({
             'clicker': self.clicker.get_state(),
-            'predictor': self.predictor.get_states()
+            'predictor': self.predictor.get_states(),
         })
 
         click = clicker.Click(is_positive=is_positive, coords=(y, x))
@@ -66,13 +69,24 @@ class InteractiveController:
 
         self.update_image_callback()
 
-    def draw_brush(self, x, y, is_positive):
-        self.states.append({
-            'clicker': self.clicker.get_state(),
-            'predictor': self.predictor.get_states()
-        })
-        new_p = 1 if is_positive else 0
-        pred = self.predictor.update_prediction(x, y, 20, new_p)
+    def draw_brush(self, x, y, is_positive, radius=20):
+        new_p = 1.0 if is_positive else 0.0
+        if self.brush_stroke is None:
+            self.brush_stroke = Brushstroke(new_p, radius, self.image.shape[:2])
+
+        self.brush_stroke.add_point((x, y))
+        new_brush_points = self.brush_stroke.get_new_brush_points()
+        if len(new_brush_points) == 0:
+            return
+
+        bound_x_1 = max(0, np.min(new_brush_points[:, 0]) - radius)
+        bound_x_2 = min(self.image.shape[1], np.max(new_brush_points[:, 0]) + radius) + 1
+        bound_y_1 = max(0, np.min(new_brush_points[:, 1]) - radius)
+        bound_y_2 = min(self.image.shape[0], np.max(new_brush_points[:, 1]) + radius) + 1
+
+        bounded_update_area = dict(x1 = bound_x_1, x2 = bound_x_2, y1 = bound_y_1, y2 = bound_y_2)
+
+        pred = self.predictor.update_prediction(new_brush_points, radius, new_p)
 
         torch.cuda.empty_cache()
 
@@ -81,10 +95,24 @@ class InteractiveController:
         else:
             self.probs_history.append((np.zeros_like(pred), pred))
 
-        self.update_image_callback()
+        self.update_image_callback(bounded_update_area=bounded_update_area)
 
-    def update_baseline_controller(self):
-        self.predictor.update_prediction()
+    def end_brush_stroke(self):
+        self.states.append({
+            'clicker': self.clicker.get_state(),
+            'predictor': self.predictor.get_states(),
+        })
+
+        pred = self.predictor.get_current_prediction()
+
+        torch.cuda.empty_cache()
+
+        if self.probs_history:
+            self.probs_history.append((self.probs_history[-1][0], pred))
+        else:
+            self.probs_history.append((np.zeros_like(pred), pred))
+
+        self.brush_stroke = None
 
     def undo_click(self):
         if not self.states:
@@ -159,16 +187,19 @@ class InteractiveController:
             result_mask[self.current_object_prob > self.prob_thresh] = self.object_count + 1
         return result_mask
 
-    def get_visualization(self, alpha_blend, click_radius):
+    def get_visualization(self, alpha_blend, click_radius, canvas_img=None,
+                          bounded_update_area=None):
         if self.image is None:
             return None
 
         results_mask_for_vis = self.result_mask
         vis = draw_with_blend_and_clicks(self.image, mask=results_mask_for_vis, alpha=alpha_blend,
-                                         clicks_list=self.clicker.clicks_list, radius=click_radius)
+                                         clicks_list=self.clicker.clicks_list, radius=click_radius,
+                                         canvas_img=canvas_img, bound_area=bounded_update_area)
         if self.probs_history:
             total_mask = self.probs_history[-1][0] > self.prob_thresh
             results_mask_for_vis[np.logical_not(total_mask)] = 0
-            vis = draw_with_blend_and_clicks(vis, mask=results_mask_for_vis, alpha=alpha_blend)
+            vis = draw_with_blend_and_clicks(vis, mask=results_mask_for_vis, alpha=alpha_blend,
+                                             canvas_img = canvas_img, bound_area=bounded_update_area)
 
         return vis
