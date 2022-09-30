@@ -114,7 +114,6 @@ def draw_with_blend_and_clicks(img, mask=None, alpha=0.6, clicks_list=None,
 
     is_bound_update = canvas_img is not None and bound_area is not None
     if is_bound_update:
-        #print(f"bound_area: {bound_area}")
         result = img[bound_area["y1"]:bound_area["y2"], bound_area["x1"]:bound_area["x2"]].copy()
         if mask is not None:
             mask = mask[bound_area["y1"]:bound_area["y2"], bound_area["x1"]:bound_area["x2"]]

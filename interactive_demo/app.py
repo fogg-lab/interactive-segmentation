@@ -1,9 +1,10 @@
+import time
+
 import tkinter as tk
 from tkinter import messagebox, filedialog, ttk
 
 import cv2
 import numpy as np
-from PIL import Image
 
 from interactive_demo.canvas import CanvasImage
 from interactive_demo.controller import InteractiveController
@@ -45,6 +46,7 @@ class InteractiveDemoApp(ttk.Frame):
         self.state['lbfgs_max_iters'].trace(mode='w', callback=self._change_brs_mode)
         self._change_brs_mode()
 
+
     def _init_state(self):
         self.state = {
             'zoomin_params': {
@@ -58,12 +60,11 @@ class InteractiveDemoApp(ttk.Frame):
             'predictor_params': {
                 'net_clicks_limit': tk.IntVar(value=8)
             },
+
             'brs_mode': tk.StringVar(value='NoBRS'),
             'prob_thresh': tk.DoubleVar(value=0.5),
             'lbfgs_max_iters': tk.IntVar(value=20),
-
             'brush_size': tk.IntVar(value=1), # Initialize brush size to 1
-
             'alpha_blend': tk.DoubleVar(value=0.5),
             'is_positive': tk.BooleanVar(value=True),
             'click_radius': tk.IntVar(value=3),
@@ -110,11 +111,11 @@ class InteractiveDemoApp(ttk.Frame):
             FocusButton(self.clicks_options_frame, text='Finish\nobject', bg='#b6d7a8', fg='black', width=10, height=2,
                         state=tk.DISABLED, command=self.controller.finish_object)
         self.finish_object_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
-        self.undo_click_button = \
-            FocusButton(self.clicks_options_frame, text='Undo click', bg='#ffe599', fg='black', width=10, height=2,
-                        state=tk.DISABLED, command=self.controller.undo_click)
+        self.undo_button = \
+            FocusButton(self.clicks_options_frame, text='Undo', bg='#ffe599', fg='black', width=10, height=2,
+                        state=tk.DISABLED, command=self.controller.undo)
         
-        self.undo_click_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
+        self.undo_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
         self.reset_clicks_button = \
             FocusButton(self.clicks_options_frame, text='Reset clicks', bg='#ea9999', fg='black', width=10, height=2,
                         state=tk.DISABLED, command=self._reset_last_object)
@@ -185,7 +186,6 @@ class InteractiveDemoApp(ttk.Frame):
             FocusButton(self.clicks_options_frame, text='Toggle Brush', bg='#ea9999', fg='black', width=10, height=2,
                         state=tk.NORMAL, command=self._toggle_brush)
         self.toggle_brush_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
-
 
     def _load_image_callback(self):
         self.menubar.focus_set()
@@ -258,9 +258,9 @@ class InteractiveDemoApp(ttk.Frame):
         if self.controller.is_incomplete_mask:
             self.controller.prob_thresh = self.state['prob_thresh'].get()
             self._update_image()
-            
+
     def _update_brush_size(self, value):
-        self.state['brush_size'] = tk.IntVar(value)
+        self.state['brush_size'] = tk.IntVar(value=value)
 
     def _update_blend_alpha(self, value):
         self._update_image()
@@ -321,8 +321,6 @@ class InteractiveDemoApp(ttk.Frame):
         self.controller.reset_predictor(predictor_params)
 
     def _click_callback(self, is_positive, x, y):
-        print(f"in _click_callback - x: {x}")
-        print(f"in _click_callback - y: {y}")
         self.canvas.focus_set()
 
         if self.image_on_canvas is None:
@@ -334,6 +332,7 @@ class InteractiveDemoApp(ttk.Frame):
 
     def _brush_callback(self, is_positive, x, y):
         self.canvas.focus_set()
+
         if self.image_on_canvas is None:
             messagebox.showwarning("Warning", "Please load an image first")
             return
@@ -344,15 +343,17 @@ class InteractiveDemoApp(ttk.Frame):
     def _end_brush_stroke_callback(self):
         self.controller.end_brush_stroke()
 
-    def _update_image(self, reset_canvas=False, bounded_update_area=None):
+    def _update_image(self, reset_canvas=False, bounded_update_area=None, brush_update = False):
         if self.image_on_canvas is not None and bounded_update_area is not None:
             canvas_img = self.image_on_canvas.get_original_canvas_image()
         else:
             canvas_img = None
+
         image = self.controller.get_visualization(alpha_blend=self.state['alpha_blend'].get(),
                                                   click_radius=self.state['click_radius'].get(),
                                                   canvas_img=canvas_img,
                                                   bounded_update_area=bounded_update_area)
+
         if self.image_on_canvas is None:
             self.image_on_canvas = CanvasImage(self.canvas_frame, self.canvas)
             self.image_on_canvas.register_click_callback(self._click_callback)
@@ -360,15 +361,17 @@ class InteractiveDemoApp(ttk.Frame):
             self.image_on_canvas.register_end_brush_stroke_callback(self._end_brush_stroke_callback)
 
         self._set_click_dependent_widgets_state()
+
         if image is not None:
             self.image_on_canvas.reload_image(image, reset_canvas)
+
 
     def _set_click_dependent_widgets_state(self):
         after_1st_click_state = tk.NORMAL if self.controller.is_incomplete_mask else tk.DISABLED
         before_1st_click_state = tk.DISABLED if self.controller.is_incomplete_mask else tk.NORMAL
 
         self.finish_object_button.configure(state=after_1st_click_state)
-        self.undo_click_button.configure(state=after_1st_click_state)
+        self.undo_button.configure(state=after_1st_click_state)
         self.reset_clicks_button.configure(state=after_1st_click_state)
         self.zoomin_options_frame.set_frame_state(before_1st_click_state)
         self.brs_options_frame.set_frame_state(before_1st_click_state)
