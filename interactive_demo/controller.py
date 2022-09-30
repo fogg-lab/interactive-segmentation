@@ -102,7 +102,7 @@ class InteractiveController:
         else:
             self.probs_history[-1] = (self.probs_history[-1][0], pred)
 
-        self.update_image_callback(bounded_update_area=bounded_update_area, brush_update=True)
+        self.update_image_callback(bounded_update_area=bounded_update_area)
 
 
     def end_brush_stroke(self):

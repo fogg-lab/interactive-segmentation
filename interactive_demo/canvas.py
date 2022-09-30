@@ -108,7 +108,7 @@ class CanvasImage:
     def get_original_canvas_image(self):
         return self.__original_image_ndarray
 
-    def reload_image(self, image, reset_canvas=True, brush_update = False):
+    def reload_image(self, image, reset_canvas=True):
         self.__original_image_ndarray = image
         self.__original_image = Image.fromarray(image)
         self.__current_image = Image.fromarray(image)

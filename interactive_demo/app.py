@@ -343,7 +343,7 @@ class InteractiveDemoApp(ttk.Frame):
     def _end_brush_stroke_callback(self):
         self.controller.end_brush_stroke()
 
-    def _update_image(self, reset_canvas=False, bounded_update_area=None, brush_update = False):
+    def _update_image(self, reset_canvas=False, bounded_update_area=None):
         if self.image_on_canvas is not None and bounded_update_area is not None:
             canvas_img = self.image_on_canvas.get_original_canvas_image()
         else:
