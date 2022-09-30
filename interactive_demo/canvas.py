@@ -5,6 +5,7 @@ import sys
 import time
 import math
 import tkinter as tk
+import cv2
 
 from tkinter import ttk
 from PIL import Image, ImageTk
@@ -94,6 +95,7 @@ class CanvasImage:
         self.__original_image = None
         self.__current_image = None
 
+
     def register_click_callback(self,  click_callback):
         self._click_callback = click_callback
 
@@ -112,8 +114,8 @@ class CanvasImage:
         self.__current_image = Image.fromarray(image)
 
         if reset_canvas:
+            #print("resetting canvas")
             self.imwidth, self.imheight = self.__original_image.size
-            self.__min_side = min(self.imwidth, self.imheight)  # get the smaller image side
 
             scale = min(self.canvas.winfo_width() / self.imwidth, self.canvas.winfo_height() / self.imheight)
             if self.container:
@@ -124,6 +126,7 @@ class CanvasImage:
             self._reset_canvas_offset()
 
         self.__show_image()  # show image on the canvas
+
         self.canvas.focus_set()  # set focus on the canvas
 
     def grid(self, **kw):
@@ -166,7 +169,6 @@ class CanvasImage:
             crop_w, crop_h = math.ceil(sx2 - sx1 + 2 * border_width), math.ceil(sy2 - sy1 + 2 * border_width)
             crop_w = min(crop_w, self.__original_image.width - crop_x)
             crop_h = min(crop_h, self.__original_image.height - crop_y)
-
             __current_image = self.__original_image.crop((crop_x, crop_y,
                                                           crop_x + crop_w, crop_y + crop_h))
             crop_zw = int(round(crop_w * self.current_scale))
@@ -175,14 +177,14 @@ class CanvasImage:
             crop_zx, crop_zy = crop_x * zoom_sx, crop_y * zoom_sy
             self.real_scale = (zoom_sx, zoom_sy)
 
-            interpolation = Image.NEAREST if self.current_scale > 2.0 else Image.ANTIALIAS
+            interpolation = Image.NEAREST
             __current_image = __current_image.resize((crop_zw, crop_zh), interpolation)
+
             zx1, zy1 = x1 - crop_zx, y1 - crop_zy
             zx2 = min(zx1 + self.canvas.winfo_width(), __current_image.width)
             zy2 = min(zy1 + self.canvas.winfo_height(), __current_image.height)
 
             self.__current_image = __current_image.crop((zx1, zy1, zx2, zy2))
-
             imagetk = ImageTk.PhotoImage(self.__current_image)
             imageid = self.canvas.create_image(max(box_canvas[0], box_img_int[0]),
                                                max(box_canvas[1], box_img_int[1]),

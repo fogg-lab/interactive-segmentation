@@ -10,7 +10,6 @@ import tkinter as tk
 
 import torch
 
-from isegm.utils import exp
 from isegm.inference import utils
 from interactive_demo.app import InteractiveDemoApp
 
