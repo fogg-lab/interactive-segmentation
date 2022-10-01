@@ -160,7 +160,7 @@ def draw_with_blend_and_clicks(img, mask=None, alpha=0.6, clicks_list=None,
 
 def add_tag(image, tag = 'nodefined', tag_h = 40):
     image = image.astype(np.uint8)
-    H,W = image.shape[0], image.shape[1]
+    W = image.shape[1]
     tag_blanc = np.ones((tag_h,W,3)).astype(np.uint8) * 255
     cv2.putText(tag_blanc,tag,(10,30),cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0 ), 1)
     image = cv2.vconcat([image,tag_blanc])

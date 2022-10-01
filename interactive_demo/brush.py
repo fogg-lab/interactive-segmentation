@@ -1,6 +1,10 @@
 import numpy as np
 from numpy.polynomial import Polynomial as P
 
+class Brush:
+    def __init__(self):
+        pass
+
 class Brushstroke:
     """Represents a continuous brushstroke on the image while the user is drawing."""
     def __init__(self, probability, radius, img_shape):

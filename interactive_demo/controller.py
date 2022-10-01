@@ -1,7 +1,3 @@
-import os
-import time
-import cv2
-
 import torch
 import numpy as np
 from tkinter import messagebox
@@ -42,7 +38,8 @@ class InteractiveController:
 
     def set_mask(self, mask):
         if self.image.shape[:2] != mask.shape[:2]:
-            messagebox.showwarning("Warning", "A segmentation mask must have the same sizes as the current image!")
+            messagebox.showwarning(
+                "Warning", "A segmentation mask must have the same sizes as the current image!")
             return
 
         if len(self.probs_history) > 0:
@@ -160,8 +157,13 @@ class InteractiveController:
     def reset_predictor(self, predictor_params=None):
         if predictor_params is not None:
             self.predictor_params = predictor_params
-        self.predictor = get_predictor(self.net, device=self.device,
-                                       **self.predictor_params)
+        brs_mode = self.predictor_params.get('brs_mode')
+        zoom_in_params = self.predictor_params.get('zoom_in_params')
+        net_clicks_limit = self.predictor_params.get('net_clicks_limit')
+        max_size = self.predictor_params.get('max_size')
+        self.predictor = get_predictor(net=self.net, brs_mode=brs_mode,
+                                       device=self.device, zoom_in_params=zoom_in_params,
+                                       net_clicks_limit=net_clicks_limit, max_size=max_size)
         if self.image is not None:
             self.predictor.set_input_image(self.image)
 

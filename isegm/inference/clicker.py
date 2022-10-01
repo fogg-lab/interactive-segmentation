@@ -3,7 +3,7 @@ from copy import deepcopy
 import cv2
 
 
-class Clicker(object):
+class Clicker:
     def __init__(self, gt_mask=None, init_clicks=None, ignore_label=-1, click_indx_offset=0):
         self.click_indx_offset = click_indx_offset
         if gt_mask is not None:

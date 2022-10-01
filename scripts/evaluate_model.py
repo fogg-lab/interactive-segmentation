@@ -103,8 +103,8 @@ def main():
     logs_path.mkdir(parents=True, exist_ok=True)
 
     single_model_eval = len(checkpoints_list) == 1
-    assert not args.iou_analysis if not single_model_eval else True, \
-        "Can't perform IoU analysis for multiple checkpoints"
+    if not single_model_eval:
+        assert not args.iou_analysis, "Can't perform IoU analysis for multiple checkpoints"
     print_header = single_model_eval
     for dataset_name in args.datasets.split(','):
         dataset = utils.get_dataset(dataset_name, cfg)
@@ -113,16 +113,12 @@ def main():
         for checkpoint_path in checkpoints_list:
             model = utils.load_is_model(checkpoint_path, args.device)
 
-            predictor_params, zoomin_params = get_predictor_and_zoomin_params(args, dataset_name)
+            zoomin_params = get_zoomin_params(args, dataset_name)
             predictor = get_predictor(model, args.mode, args.device,
                                       infer_size=args.infer_size,
-                                      prob_thresh=args.thresh,
-                                      predictor_params=predictor_params,
                                       focus_crop_r = args.focus_crop_r,
-                                      #zoom_in_params=None)
                                       zoom_in_params=zoomin_params)
 
-            #vis_callback = get_prediction_vis_callback(logs_path, dataset_name, args.thresh) if args.vis else None
             dataset_results = evaluate_dataset(dataset, predictor, pred_thr=args.thresh,
                                                max_iou_thr=args.target_iou,
                                                min_clicks=args.min_n_clicks,
@@ -143,7 +139,7 @@ def main():
             print_header = False
 
 
-def get_predictor_and_zoomin_params(args, dataset_name):
+def get_zoomin_params(args, dataset_name):
     predictor_params = {}
 
     if args.clicks_limit is not None:
@@ -165,7 +161,7 @@ def get_predictor_and_zoomin_params(args, dataset_name):
     else:
         raise NotImplementedError
 
-    return predictor_params, zoom_in_params
+    return zoom_in_params
 
 
 def get_checkpoints_list_and_logs_path(args, cfg):
@@ -204,7 +200,7 @@ def save_results(args, row_name, dataset_name, logs_path, logs_prefix, dataset_r
                  save_ious=False, print_header=True, single_model_eval=False):
     all_ious, elapsed_time = dataset_results
     #print(all_ious)
-    mean_spc, mean_spi = utils.get_time_metrics(all_ious, elapsed_time)
+    mean_spc, _ = utils.get_time_metrics(all_ious, elapsed_time)
 
     iou_thrs = np.arange(0.8, min(0.95, args.target_iou) + 0.001, 0.05).tolist()
     noc_list, over_max_list = utils.compute_noc_metric(all_ious, iou_thrs=iou_thrs, max_clicks=args.n_clicks)

@@ -94,6 +94,12 @@ class CanvasImage:
         self.__original_image_ndarray = None
         self.__original_image = None
         self.__current_image = None
+        self.imwidth = None
+        self.imheight = None
+
+        self.real_scale = None
+        self._last_rb_click_time = None
+        self._last_rb_click_event = None
 
 
     def register_click_callback(self,  click_callback):
@@ -228,13 +234,13 @@ class CanvasImage:
         self.canvas.scale('all', x, y, relative_scale, relative_scale)  # rescale all objects
 
     # noinspection PyUnusedLocal
-    def __scroll_x(self, *args, **kwargs):
+    def __scroll_x(self, *args):
         """ Scroll canvas horizontally and redraw the image """
         self.canvas.xview(*args)  # scroll horizontally
         self.__show_image()  # redraw the image
 
     # noinspection PyUnusedLocal
-    def __scroll_y(self, *args, **kwargs):
+    def __scroll_y(self, *args):
         """ Scroll canvas vertically and redraw the image """
         self.canvas.yview(*args)  # scroll vertically
         self.__show_image()  # redraw the image
@@ -366,10 +372,10 @@ class CanvasImage:
                     's': [39, 116, 88],
                 }
             if event.keycode in self.keycodes['d']:  # scroll right, keys 'd' or 'Right'
-                self.__scroll_x('scroll', 1, 'unit', event=event)
+                self.__scroll_x('scroll', 1, 'unit')
             elif event.keycode in self.keycodes['a']:  # scroll left, keys 'a' or 'Left'
-                self.__scroll_x('scroll', -1, 'unit', event=event)
+                self.__scroll_x('scroll', -1, 'unit')
             elif event.keycode in self.keycodes['w']:  # scroll up, keys 'w' or 'Up'
-                self.__scroll_y('scroll', -1, 'unit', event=event)
+                self.__scroll_y('scroll', -1, 'unit')
             elif event.keycode in self.keycodes['s']:  # scroll down, keys 's' or 'Down'
-                self.__scroll_y('scroll', 1, 'unit', event=event)
+                self.__scroll_y('scroll', 1, 'unit')

@@ -5,17 +5,12 @@ from torchvision import transforms
 import cv2
 import numpy as np
 
-from isegm.inference.transforms import SigmoidForPred, LimitLongestSide, ResizeTrans
+from isegm.inference.transforms import SigmoidForPred, LimitLongestSide
 from isegm.utils.crop_local import map_point_in_bbox
 
 class BaselinePredictor(object):
-    def __init__(self, model, device,
-                 net_clicks_limit=None,
-                 with_flip=False,
-                 zoom_in=None,
-                 max_size=None,
-                 infer_size = 384,
-                 **kwargs):
+    def __init__(self, model, device, net_clicks_limit=None, with_flip=False,
+                 zoom_in=None, max_size=None, infer_size = 384):
         self.with_flip = with_flip
         self.net_clicks_limit = net_clicks_limit
         self.original_image = None
@@ -25,6 +20,8 @@ class BaselinePredictor(object):
         self.model_indx = 0
         self.click_models = None
         self.net_state_dict = None
+        self.last_y = None
+        self.last_x = None
 
         if isinstance(model, tuple):
             self.net, self.click_models = model
@@ -65,7 +62,8 @@ class BaselinePredictor(object):
         self.last_x = last_x
 
         if self.click_models is not None:
-            model_indx = min(clicker.click_indx_offset + len(clicks_list), len(self.click_models)) - 1
+            model_indx = min(clicker.click_indx_offset + len(clicks_list),
+                             len(self.click_models)) - 1
             if model_indx != self.model_indx:
                 self.model_indx = model_indx
                 self.net = self.click_models[model_indx]
@@ -76,19 +74,16 @@ class BaselinePredictor(object):
         if hasattr(self.net, 'with_prev_mask') and self.net.with_prev_mask:
             input_image = torch.cat((input_image, prev_mask), dim=1)
 
-        image_nd, clicks_lists, is_image_changed = self.apply_transforms(
+        image_nd, clicks_lists = self.apply_transforms(
             input_image, [clicks_list]
         )
 
-        pred_logits = self._get_prediction(image_nd, clicks_lists, is_image_changed)
+        pred_logits = self._get_prediction(image_nd, clicks_lists)
         prediction = F.interpolate(pred_logits, mode='bilinear', align_corners=True,
                                    size=image_nd.size()[2:])
 
         for t in reversed(self.transforms):
             prediction = t.inv_transform(prediction)
-
-        #if self.zoom_in is not None and self.zoom_in.check_possible_recalculation():
-        #    return self.get_prediction(clicker)
 
         self.prev_prediction = prediction
         return prediction.cpu().numpy()[0, 0]
@@ -98,16 +93,12 @@ class BaselinePredictor(object):
         pred = self.prev_prediction.cpu().detach().numpy().squeeze()
         pred_h, pred_w = pred.shape
 
-        #print(f"New points along brush stroke: {points}")
-
         # Add padding when circle is partially outside of image
         min_x, max_x = np.min(points[:, 0]), np.max(points[:, 0])
         min_y, max_y = np.min(points[:, 1]), np.max(points[:, 1])
 
-        top = max(0, radius - min_y)
-        bottom = max(0, max_y + radius + 1 - pred.shape[0])
-        left = max(0, radius - min_x)
-        right = max(0, max_x + radius + 1 - pred.shape[1])
+        top, bottom = max(0, radius - min_y), max(0, max_y + radius + 1 - pred.shape[0])
+        left, right = max(0, radius - min_x), max(0, max_x + radius + 1 - pred.shape[1])
         pred = cv2.copyMakeBorder(pred, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
 
         for x, y in points:
@@ -119,25 +110,23 @@ class BaselinePredictor(object):
         self.prev_prediction = torch.from_numpy(pred).unsqueeze(0).unsqueeze(0).to(self.device).float()
         return self.prev_prediction.cpu().numpy()[0, 0]
 
-    def _get_prediction(self, image_nd, clicks_lists, is_image_changed):
+    def _get_prediction(self, image_nd, clicks_lists):
         points_nd = self.get_points_nd(clicks_lists)
         output =  self.net(image_nd, points_nd)
         return output['instances']
 
     def _get_refine(self, coarse_mask, image, clicks, feature, focus_roi, focus_roi_in_global_roi):
-        y1,y2,x1,x2 = focus_roi
+        y1, y2, x1, x2 = focus_roi
         image_focus = image[:,:,y1:y2,x1:x2]
         try:
             image_focus = F.interpolate(image_focus,(self.crop_l,self.crop_l),mode='bilinear',align_corners=True)
         except:
-            ly,lx,lin = clicks[-1].coords_and_indx
+            ly,lx,_ = clicks[-1].coords_and_indx
             print('last clicks: ',clicks[-1].is_positive)
             print(self.prev_prediction.shape)
             print(ly,lx, self.prev_prediction[0,0,ly,lx])
 
         mask_focus = coarse_mask
-        #mask_focus = coarse_mask[:,:,y1:y2,x1:x2]
-        #mask_focus = F.interpolate(mask_focus,(self.crop_l,self.crop_l),mode='bilinear',align_corners=True)
 
         points_nd = self.get_points_nd_inbbox(clicks,y1,y2,x1,x2)
         y1,y2,x1,x2 = focus_roi_in_global_roi
@@ -149,23 +138,17 @@ class BaselinePredictor(object):
         self.focus_refined = torch.sigmoid(focus_refined).cpu().numpy()[0, 0] * 255
         return focus_refined
 
-        #return self.net.refine(image_focus,points_nd, feature, mask_focus, roi)['instances_coarse'] 
-
     def mapp_roi(self, focus_roi, global_roi):
-        yg1,yg2,xg1,xg2 = global_roi
-        hg,wg = yg2-yg1, xg2-xg1
-        yf1,yf2,xf1,xf2 = focus_roi
+        yg1, yg2, xg1, xg2 = global_roi
+        hg, wg = yg2 - yg1, xg2 - xg1
+        yf1, yf2, xf1, xf2 = focus_roi
 
-        yf1_n = (yf1-yg1) * (self.crop_l/hg)
-        yf2_n = (yf2-yg1) * (self.crop_l/hg)
-        xf1_n = (xf1-xg1) * (self.crop_l/wg)
-        xf2_n = (xf2-xg1) * (self.crop_l/wg)
+        yf1_n = (yf1 - yg1) * (self.crop_l / hg)
+        yf2_n = (yf2 - yg1) * (self.crop_l / hg)
+        xf1_n = (xf1 - xg1) * (self.crop_l / wg)
+        xf2_n = (xf2 - xg1) * (self.crop_l / wg)
 
-        yf1_n = max(yf1_n,0)
-        yf2_n = min(yf2_n,self.crop_l)
-        xf1_n = max(xf1_n,0)
-        xf2_n = min(xf2_n,self.crop_l)
-        return (yf1_n,yf2_n,xf1_n,xf2_n)
+        return (max(yf1_n, 0), min(yf2_n, self.crop_l), max(xf1_n, 0), min(xf2_n, self.crop_l))
 
     def _get_transform_states(self):
         return [x.get_state() for x in self.transforms]
@@ -177,12 +160,10 @@ class BaselinePredictor(object):
         print('_set_transform_states')
 
     def apply_transforms(self, image_nd, clicks_lists):
-        is_image_changed = False
         for t in self.transforms:
             image_nd, clicks_lists = t.transform(image_nd, clicks_lists)
-            is_image_changed |= t.image_changed
 
-        return image_nd, clicks_lists, is_image_changed
+        return image_nd, clicks_lists
 
     def get_points_nd(self, clicks_lists):
         total_clicks = []
@@ -204,16 +185,15 @@ class BaselinePredictor(object):
 
         return torch.tensor(total_clicks, device=self.device)
 
-    def get_points_nd_inbbox(self, clicks_list, y1,y2,x1,x2):
+    def get_points_nd_inbbox(self, clicks_list, y1, y2, x1, x2):
         total_clicks = []
         num_pos = sum(x.is_positive for x in clicks_list)
-        num_neg =len(clicks_list) - num_pos 
-        num_max_points = max(num_pos, num_neg)
-        num_max_points = max(1, num_max_points)
+        num_neg = len(clicks_list) - num_pos
+        num_max_points = max(1, max(num_pos, num_neg))
         pos_clicks, neg_clicks = [],[]
         for click in clicks_list:
-            flag,y,x,index = click.is_positive, click.coords[0],click.coords[1], 0
-            y,x = map_point_in_bbox(y,x,y1,y2,x1,x2,self.crop_l)
+            flag, y, x, index = click.is_positive, click.coords[0], click.coords[1], 0
+            y, x = map_point_in_bbox(y, x, y1, y2, x1, x2, self.crop_l)
             if flag:
                 pos_clicks.append( (y,x,index))
             else:

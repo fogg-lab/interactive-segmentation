@@ -42,7 +42,7 @@ class InteractiveDemoApp(ttk.Frame):
         self.state['zoomin_params']['skip_clicks'].trace(mode='w', callback=self._reset_predictor)
         self.state['zoomin_params']['target_size'].trace(mode='w', callback=self._reset_predictor)
         self.state['zoomin_params']['expansion_ratio'].trace(mode='w', callback=self._reset_predictor)
-        self.state['predictor_params']['net_clicks_limit'].trace(mode='w', callback=self._change_brs_mode)
+        self.state['net_clicks_limit'].trace(mode='w', callback=self._change_brs_mode)
         self.state['lbfgs_max_iters'].trace(mode='w', callback=self._change_brs_mode)
         self._change_brs_mode()
 
@@ -57,10 +57,7 @@ class InteractiveDemoApp(ttk.Frame):
                 'expansion_ratio': tk.DoubleVar(value=1.0)
             },
 
-            'predictor_params': {
-                'net_clicks_limit': tk.IntVar(value=8)
-            },
-
+            'net_clicks_limit': tk.IntVar(value=8),
             'brs_mode': tk.StringVar(value='NoBRS'),
             'prob_thresh': tk.DoubleVar(value=0.5),
             'lbfgs_max_iters': tk.IntVar(value=20),
@@ -150,7 +147,7 @@ class InteractiveDemoApp(ttk.Frame):
         self.net_clicks_label = tk.Label(self.brs_options_frame, text="Network clicks")
         self.net_clicks_label.grid(row=0, column=1, pady=2, sticky='e')
         self.net_clicks_entry = BoundedNumericalEntry(self.brs_options_frame,
-                                                      variable=self.state['predictor_params']['net_clicks_limit'],
+                                                      variable=self.state['net_clicks_limit'],
                                                       min_value=0, max_value=None, vartype=int, allow_inf=True,
                                                       name='net_clicks_limit')
         self.net_clicks_entry.grid(row=0, column=2, padx=10, pady=2, sticky='w')
@@ -294,7 +291,7 @@ class InteractiveDemoApp(ttk.Frame):
     def _reset_predictor(self, *args, **kwargs):
         brs_mode = self.state['brs_mode'].get()
         prob_thresh = self.state['prob_thresh'].get()
-        net_clicks_limit = None if brs_mode == 'NoBRS' else self.state['predictor_params']['net_clicks_limit'].get()
+        net_clicks_limit = None if brs_mode == 'NoBRS' else self.state['net_clicks_limit'].get()
 
         if self.state['zoomin_params']['use_zoom_in'].get():
             zoomin_params = {
@@ -311,11 +308,8 @@ class InteractiveDemoApp(ttk.Frame):
             'brs_mode': brs_mode,
             'prob_thresh': prob_thresh,
             'zoom_in_params': zoomin_params,
-            'predictor_params': {
-                'net_clicks_limit': net_clicks_limit,
-                'max_size': self.limit_longest_size
-            },
-            'brs_opt_func_params': {'min_iou_diff': 1e-3},
+            'net_clicks_limit': net_clicks_limit,
+            'max_size': self.limit_longest_size,
             'lbfgs_params': {'maxfun': self.state['lbfgs_max_iters'].get()}
         }
         self.controller.reset_predictor(predictor_params)

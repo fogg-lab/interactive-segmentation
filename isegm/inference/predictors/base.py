@@ -5,19 +5,15 @@ from isegm.inference.transforms import AddHorizontalFlip, SigmoidForPred, LimitL
 from isegm.utils.crop_local import  map_point_in_bbox
 
 class BasePredictor(object):
-    def __init__(self, model, device,
-                 net_clicks_limit=None,
-                 with_flip=False,
-                 zoom_in=None,
-                 max_size=None,
-                 **kwargs):
+    def __init__(self, model, device, net_clicks_limit=None, with_flip=False,
+                 zoom_in=None, max_size=None):
         self.with_flip = with_flip
         self.net_clicks_limit = net_clicks_limit
-        self.original_image = None
         self.device = device
         self.zoom_in = zoom_in
-        self.prev_prediction = None
         self.model_indx = 0
+        self.prev_prediction = None
+        self.original_image = None
         self.click_models = None
         self.net_state_dict = None
 
@@ -40,8 +36,6 @@ class BasePredictor(object):
         self.with_flip = True
         if self.with_flip:
             self.transforms.append(AddHorizontalFlip())
-
-
 
     def set_input_image(self, image):
         image_nd = self.to_tensor(image)
@@ -74,7 +68,7 @@ class BasePredictor(object):
         if hasattr(self.net, 'with_prev_mask') and self.net.with_prev_mask:
             input_image = torch.cat((input_image, prev_mask), dim=1)
 
-        image_nd, clicks_lists, is_image_changed = self.apply_transforms(
+        image_nd, clicks_lists = self.apply_transforms(
             input_image, [clicks_list]
         )
 
@@ -93,7 +87,7 @@ class BasePredictor(object):
 
         self.global_roi = global_roi
 
-        pred_logits, feature= self._get_prediction(image_nd, clicks_lists, is_image_changed)
+        pred_logits, feature= self._get_prediction(image_nd, clicks_lists)
         prediction = F.interpolate(pred_logits, mode='bilinear', align_corners=True,
                                    size=image_nd.size()[2:])
 
@@ -106,18 +100,10 @@ class BasePredictor(object):
         clicks_list = clicker.get_clicks()
         image_full = self.original_image
 
-        coarse_mask_np = coarse_mask.cpu().numpy()[0, 0] 
-        prev_mask_np = prev_mask.cpu().numpy()[0, 0] 
-
         if len(clicks_list) > 10:
-            progress_mode = True
-        else:
-            progress_mode = False
-
-        if progress_mode:
             coarse_mask = self.prev_prediction
             coarse_mask  = torch.log( coarse_mask/(1-coarse_mask)  )
-        
+
         focus_roi = (y1,y2,x1,x2)
         self.focus_roi = focus_roi
         focus_roi_in_global_roi = self.mapp_roi(focus_roi, global_roi)
@@ -127,12 +113,11 @@ class BasePredictor(object):
         coarse_mask[:,:,y1:y2,x1:x2] =  focus_pred
         coarse_mask = torch.sigmoid(coarse_mask)
 
-
         self.prev_prediction = coarse_mask
         self.transforms[0]._prev_probs = coarse_mask.cpu().numpy()
         return coarse_mask.cpu().numpy()[0, 0]
 
-    def _get_prediction(self, image_nd, clicks_lists, is_image_changed):
+    def _get_prediction(self, image_nd, clicks_lists):
         points_nd = self.get_points_nd(clicks_lists)
         output =  self.net(image_nd, points_nd)
         return output['instances'], output['feature']
@@ -143,19 +128,16 @@ class BasePredictor(object):
         try:
             image_focus = F.interpolate(image_focus,(self.crop_l,self.crop_l),mode='bilinear',align_corners=True)
         except:
-            ly,lx,lin = clicks[-1].coords_and_indx
+            ly,lx,_ = clicks[-1].coords_and_indx
             print('last clicks: ',clicks[-1].is_positive)
             print(self.prev_prediction.shape)
             print(ly,lx, self.prev_prediction[0,0,ly,lx])
 
         mask_focus = coarse_mask
-        #mask_focus = coarse_mask[:,:,y1:y2,x1:x2]
-        #mask_focus = F.interpolate(mask_focus,(self.crop_l,self.crop_l),mode='bilinear',align_corners=True)
 
         points_nd = self.get_points_nd_inbbox(clicks,y1,y2,x1,x2)
         y1,y2,x1,x2 = focus_roi_in_global_roi
         roi = torch.tensor([0,x1, y1, x2, y2]).unsqueeze(0).float().to(image_focus.device)
-
 
         pred = self.net.refine(image_focus,points_nd, feature, mask_focus, roi) #['instances_refined'] 
         focus_coarse, focus_refined = pred['instances_coarse'] , pred['instances_refined'] 
@@ -169,7 +151,7 @@ class BasePredictor(object):
         yg1,yg2,xg1,xg2 = global_roi
         hg,wg = yg2-yg1, xg2-xg1
         yf1,yf2,xf1,xf2 = focus_roi
-        
+
         yf1_n = (yf1-yg1) * (self.crop_l/hg)
         yf2_n = (yf2-yg1) * (self.crop_l/hg)
         xf1_n = (xf1-xg1) * (self.crop_l/wg)
@@ -181,11 +163,6 @@ class BasePredictor(object):
         xf2_n = min(xf2_n,self.crop_l)
         return (yf1_n,yf2_n,xf1_n,xf2_n)
 
-
-
-
-        
-
     def _get_transform_states(self):
         return [x.get_state() for x in self.transforms]
 
@@ -196,12 +173,10 @@ class BasePredictor(object):
         print('_set_transform_states')
 
     def apply_transforms(self, image_nd, clicks_lists):
-        is_image_changed = False
         for t in self.transforms:
             image_nd, clicks_lists = t.transform(image_nd, clicks_lists)
-            is_image_changed |= t.image_changed
 
-        return image_nd, clicks_lists, is_image_changed
+        return image_nd, clicks_lists
 
     def get_points_nd(self, clicks_lists):
         total_clicks = []
@@ -242,9 +217,6 @@ class BasePredictor(object):
         neg_clicks = neg_clicks + (num_max_points - len(neg_clicks)) * [(-1, -1, -1)]
         total_clicks.append(pos_clicks + neg_clicks)
         return torch.tensor(total_clicks, device=self.device)
-
-
-        
 
     def get_states(self):
         return {
