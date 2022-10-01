@@ -1,14 +1,11 @@
 import numpy as np
 from numpy.polynomial import Polynomial as P
 
-class Brush:
-    def __init__(self):
-        pass
-
 class Brushstroke:
     """Represents a continuous brushstroke on the image while the user is drawing."""
     def __init__(self, probability, radius, img_shape):
         self.probability = probability
+        self.vertices = None
         self.radius = radius
         self.img_h, self.img_w = img_shape
         self._coords = None
@@ -58,9 +55,9 @@ class Brushstroke:
 
         # Ensure all pixels along the brush stroke are accounted for in the vertices
         new_vertices = []
-        for i, (cur_y, cur_x) in enumerate(vertices[:-1]):
-            cur_y, cur_x = int(round(cur_y)), int(round(cur_x))
-            next_y, next_x = np.round(vertices[i + 1]).astype(int)
+        for i, vertex in enumerate(vertices[:-1]):
+            cur_y, cur_x = np.round(vertex).astype(np.int32)
+            next_y, next_x = np.round(vertices[i + 1]).astype(np.int32)
             skipped_y_vals = np.arange(cur_y + 1, next_y)
             for _, skipped_y in enumerate(skipped_y_vals):
                 x_left_bound, x_right_bound = cur_x, next_x
@@ -84,6 +81,12 @@ class Brushstroke:
         vertices = vertices if self._fit_reflect_yx else np.flip(vertices, 1)
 
         # Round vertices and convert to int
-        vertices = np.round(vertices).astype(int)
+        vertices = np.round(vertices).astype(np.int32)
+
+        # Add current vertices to total brushstroke vertices
+        if self.vertices is None:
+            self.vertices = vertices
+        else:
+            self.vertices = np.append(self.vertices, vertices, axis=0)
 
         return vertices

@@ -89,7 +89,7 @@ class CanvasImage:
 
         self._click_callback = None
         self._brush_callback = None
-        self._end_brush_stroke_callback = None
+        self._end_brushstroke_callback = None
 
         self.__original_image_ndarray = None
         self.__original_image = None
@@ -108,8 +108,8 @@ class CanvasImage:
     def register_brush_callback(self,  brush_callback):
         self._brush_callback = brush_callback
     
-    def register_end_brush_stroke_callback(self,  end_brush_stroke_callback):
-        self._end_brush_stroke_callback = end_brush_stroke_callback
+    def register_end_brushstroke_callback(self,  end_brushstroke_callback):
+        self._end_brushstroke_callback = end_brushstroke_callback
 
     def get_original_canvas_image(self):
         return self.__original_image_ndarray
@@ -280,7 +280,7 @@ class CanvasImage:
         time_delta = time.time() - self._last_rb_click_time 
         move_delta = math.sqrt((event.x - self._last_rb_click_event.x) ** 2 +
                                (event.y - self._last_rb_click_event.y) ** 2)
-        self._end_brush_stroke_callback()
+        self._end_brushstroke_callback()
         if time_delta > 0.5 or move_delta > 3:
             return
 

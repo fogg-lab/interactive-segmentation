@@ -108,11 +108,11 @@ class InteractiveDemoApp(ttk.Frame):
             FocusButton(self.clicks_options_frame, text='Finish\nobject', bg='#b6d7a8', fg='black', width=10, height=2,
                         state=tk.DISABLED, command=self.controller.finish_object)
         self.finish_object_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
-        self.undo_button = \
-            FocusButton(self.clicks_options_frame, text='Undo', bg='#ffe599', fg='black', width=10, height=2,
-                        state=tk.DISABLED, command=self.controller.undo)
+        self.undo_click_button = \
+            FocusButton(self.clicks_options_frame, text='Undo click', bg='#ffe599', fg='black', width=10, height=2,
+                        state=tk.DISABLED, command=self.controller.undo_click)
         
-        self.undo_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
+        self.undo_click_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
         self.reset_clicks_button = \
             FocusButton(self.clicks_options_frame, text='Reset clicks', bg='#ea9999', fg='black', width=10, height=2,
                         state=tk.DISABLED, command=self._reset_last_object)
@@ -334,8 +334,8 @@ class InteractiveDemoApp(ttk.Frame):
         if self._check_entry(self):
             self.controller.draw_brush(x, y, self.state['is_positive'], (self.state['brush_size'].get()))
 
-    def _end_brush_stroke_callback(self):
-        self.controller.end_brush_stroke()
+    def _end_brushstroke_callback(self):
+        self.controller.end_brushstroke()
 
     def _update_image(self, reset_canvas=False, bounded_update_area=None):
         if self.image_on_canvas is not None and bounded_update_area is not None:
@@ -352,7 +352,7 @@ class InteractiveDemoApp(ttk.Frame):
             self.image_on_canvas = CanvasImage(self.canvas_frame, self.canvas)
             self.image_on_canvas.register_click_callback(self._click_callback)
             self.image_on_canvas.register_brush_callback(self._brush_callback)
-            self.image_on_canvas.register_end_brush_stroke_callback(self._end_brush_stroke_callback)
+            self.image_on_canvas.register_end_brushstroke_callback(self._end_brushstroke_callback)
 
         self._set_click_dependent_widgets_state()
 
@@ -365,7 +365,7 @@ class InteractiveDemoApp(ttk.Frame):
         before_1st_click_state = tk.DISABLED if self.controller.is_incomplete_mask else tk.NORMAL
 
         self.finish_object_button.configure(state=after_1st_click_state)
-        self.undo_button.configure(state=after_1st_click_state)
+        self.undo_click_button.configure(state=after_1st_click_state)
         self.reset_clicks_button.configure(state=after_1st_click_state)
         self.zoomin_options_frame.set_frame_state(before_1st_click_state)
         self.brs_options_frame.set_frame_state(before_1st_click_state)

@@ -13,7 +13,8 @@ class InteractiveController:
         self.net = net
         self.prob_thresh = prob_thresh
         self.clicker = clicker.Clicker()
-        self.brush_stroke = None
+        self.brushstrokes = []
+        self.current_brushstroke = None
 
         self.states = []
         self.probs_history = []
@@ -73,12 +74,12 @@ class InteractiveController:
 
     def draw_brush(self, x, y, is_positive, radius=20):
         new_p = 1.0 if is_positive else 0.0
-        is_new_brush_stroke = self.brush_stroke is None
-        if is_new_brush_stroke:
-            self.brush_stroke = Brushstroke(new_p, radius, self.image.shape[:2])
+        is_new_brushstroke = self.current_brushstroke is None
+        if is_new_brushstroke:
+            self.current_brushstroke = Brushstroke(new_p, radius, self.image.shape[:2])
 
-        self.brush_stroke.add_point((x, y))
-        new_brush_points = self.brush_stroke.get_new_brush_points()
+        self.current_brushstroke.add_point((x, y))
+        new_brush_points = self.current_brushstroke.get_new_brush_points()
         if len(new_brush_points) == 0:
             return
 
@@ -94,7 +95,7 @@ class InteractiveController:
 
         if not self.probs_history:
             self.probs_history.append((np.zeros_like(pred), pred))
-        elif is_new_brush_stroke:
+        elif is_new_brushstroke:
             self.probs_history.append((self.probs_history[-1][0], pred))
         else:
             self.probs_history[-1] = (self.probs_history[-1][0], pred)
@@ -102,17 +103,17 @@ class InteractiveController:
         self.update_image_callback(bounded_update_area=bounded_update_area)
 
 
-    def end_brush_stroke(self):
+    def end_brushstroke(self):
         self.states.append({
             'clicker': self.clicker.get_state(),
             'predictor': self.predictor.get_states(),
         })
 
         torch.cuda.empty_cache()
+        self.brushstrokes.append(self.current_brushstroke)
+        self.current_brushstroke = None
 
-        self.brush_stroke = None
-
-    def undo(self):
+    def undo_click(self):
         if not self.states:
             return
 
