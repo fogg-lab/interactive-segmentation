@@ -110,53 +110,63 @@ def get_boundaries(instances_masks, boundaries_width=1):
 
 def draw_with_blend_and_clicks(img, mask=None, alpha=0.6, clicks_list=None,
                                pos_color=(0, 255, 0), neg_color=(255, 0, 0),
-                               radius=4, canvas_img=None, bound_area=None):
+                               radius=4, canvas_img=None, brush=None):
 
-    is_bound_update = canvas_img is not None and bound_area is not None
-    if is_bound_update:
-        result = img[bound_area["y1"]:bound_area["y2"], bound_area["x1"]:bound_area["x2"]].copy()
-        if mask is not None:
-            mask = mask[bound_area["y1"]:bound_area["y2"], bound_area["x1"]:bound_area["x2"]]
-    else:
+    if brush is not None:
+        brush_mask, bound_area = brush.get_brush_mask()
+
+    is_brush_update = canvas_img is not None and brush is not None
+
+    if brush is None:
         result = img.copy()
+    else:
+        if is_brush_update:
+            y1, y2, x1, x2 = bound_area["y1"], bound_area["y2"], bound_area["x1"], bound_area["x2"]
+            brush_mask = brush_mask[y1:y2, x1:x2]
+            mask = (np.zeros((y2-y1+1, x2-x1+1), dtype=np.uint8) if mask is None
+                    else mask[y1:y2, x1:x2])
+            result = img[y1:y2, x1:x2].copy()
+        else:
+            mask = np.zeros(img.shape[:2], dtype=np.uint8) if mask is None else mask
+            result = img.copy()
+
+        brushstroke_region = brush_mask < 2
+        mask[brushstroke_region] = brush_mask[brushstroke_region]
 
     if mask is not None:
         palette = get_palette(np.max(mask) + 1)
         rgb_mask = palette[mask.astype(np.uint8)]
 
         mask_region = (mask > 0).astype(np.uint8)
-        result = (result * (1 - mask_region[:, :, np.newaxis])
-                  + (1 - alpha) * mask_region[:, :, np.newaxis] * result
-                  + alpha * rgb_mask)
+        result = (result * (1 - mask_region[:, :, np.newaxis]) +
+                  (1 - alpha) * mask_region[:, :, np.newaxis] * result + alpha * rgb_mask)
 
         result = result.astype(np.uint8)
 
     def get_relative_click_coords(coords):
-        if not is_bound_update:
+        if not is_brush_update:
             return coords
-        return (coords[0] - bound_area["y1"], coords[1] - bound_area["x1"])
+        return (coords[0] - y1, coords[1] - x1)
 
-    def is_in_bound(coords):
-        if not is_bound_update:
+    def is_in_bounds(coords):
+        if not is_brush_update:
             return True
-        return (bound_area["y1"] <= coords[0] < bound_area["y2"]
-                and bound_area["x1"] <= coords[1] < bound_area["x2"])
+        return y1 - radius <= coords[0] < y2 + radius and x1 - radius <= coords[1] < x2 + radius
+
+    if is_brush_update:
+        canvas_img[y1:y2, x1:x2] = result
+        result = canvas_img
 
     if clicks_list is not None and len(clicks_list) > 0:
         pos_points = [get_relative_click_coords(click.coords) for click in clicks_list
-                      if click.is_positive and is_in_bound(click.coords)]
+                      if click.is_positive and is_in_bounds(click.coords)]
         neg_points = [get_relative_click_coords(click.coords) for click in clicks_list
-                      if not click.is_positive and is_in_bound(click.coords)]
+                      if not click.is_positive and is_in_bounds(click.coords)]
 
         result = draw_points(result, pos_points, pos_color, radius=radius, inplace=True)
         result = draw_points(result, neg_points, neg_color, radius=radius, inplace=True)
 
-    if is_bound_update:
-        canvas_img[bound_area["y1"]:bound_area["y2"], bound_area["x1"]:bound_area["x2"]] = result
-        result = canvas_img
-
     return result
-
 
 def add_tag(image, tag = 'nodefined', tag_h = 40):
     image = image.astype(np.uint8)

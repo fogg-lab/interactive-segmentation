@@ -337,7 +337,7 @@ class CanvasImage:
             self.__brush_tool(coords)
 
     def __brush_tool(self, coords):
-        self._brush_callback(is_positive=True, x=coords[0], y=coords[1])  
+        self._brush_callback(x=coords[0], y=coords[1])  
 
     def outside(self, x, y):
         """ Checks if the point (x,y) is outside the image area """

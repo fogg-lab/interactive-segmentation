@@ -269,7 +269,7 @@ class InteractiveDemoApp(ttk.Frame):
         self._update_image()
 
     def _toggle_brush(self):
-        self.state['is_positive'] = not self.state['is_positive']
+        self.state['is_positive'].set(not self.state['is_positive'])
 
     def _change_brs_mode(self, *args):
         if self.state['brs_mode'].get() == 'NoBRS':
@@ -324,7 +324,7 @@ class InteractiveDemoApp(ttk.Frame):
         if self._check_entry(self):
             self.controller.add_click(x, y, is_positive)
 
-    def _brush_callback(self, is_positive, x, y):
+    def _brush_callback(self, x, y):
         self.canvas.focus_set()
 
         if self.image_on_canvas is None:
@@ -332,13 +332,15 @@ class InteractiveDemoApp(ttk.Frame):
             return
 
         if self._check_entry(self):
-            self.controller.draw_brush(x, y, self.state['is_positive'], (self.state['brush_size'].get()))
+            self.controller.draw_brush(x, y, self.state['is_positive'].get(),
+                                       self.state['brush_size'].get())
 
     def _end_brushstroke_callback(self):
         self.controller.end_brushstroke()
 
-    def _update_image(self, reset_canvas=False, bounded_update_area=None):
-        if self.image_on_canvas is not None and bounded_update_area is not None:
+    def _update_image(self, reset_canvas=False, brush=None):
+        if (self.image_on_canvas is not None and brush is not None
+            and brush.current_brushstroke is not None):
             canvas_img = self.image_on_canvas.get_original_canvas_image()
         else:
             canvas_img = None
@@ -346,7 +348,7 @@ class InteractiveDemoApp(ttk.Frame):
         image = self.controller.get_visualization(alpha_blend=self.state['alpha_blend'].get(),
                                                   click_radius=self.state['click_radius'].get(),
                                                   canvas_img=canvas_img,
-                                                  bounded_update_area=bounded_update_area)
+                                                  brush=brush)
 
         if self.image_on_canvas is None:
             self.image_on_canvas = CanvasImage(self.canvas_frame, self.canvas)

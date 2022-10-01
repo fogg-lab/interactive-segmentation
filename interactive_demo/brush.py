@@ -1,10 +1,91 @@
+import cv2
 import numpy as np
 from numpy.polynomial import Polynomial as P
 
+
+class Brush:
+    def __init__(self, img_shape):
+        self.current_brushstroke = None
+        # Default value in brush mask is 2, which signifies it is not part of any brush stroke
+        self._brush_mask = np.full(img_shape, 2, dtype=np.uint8)
+        self.img_shape = img_shape
+        self._bounds_of_last_brush_update = None
+
+    def start_brushstroke(self, is_positive, radius):
+        """
+        Start a new brushstroke.
+
+        Args:
+            is_positive (bool): True if brushstroke is positive, False if negative
+            radius (int): Radius of the brushstroke
+        """
+        self.current_brushstroke = Brushstroke(is_positive, radius, self.img_shape)
+
+    def add_brushstroke_point(self, coords):
+        """
+        Add a new point to the brushstroke.
+
+        Args:
+            coords (tuple): (x, y) coordinates of the new point.
+
+        Returns:
+            bool: True if brush mask was updated, False otherwise.
+        """
+        if self.current_brushstroke is None:
+            raise ValueError("Current brushstroke is None. "
+                             "You must call start_brushstroke() before adding points.")
+
+        self.current_brushstroke.add_point(coords)
+        new_points = self.current_brushstroke.estimate_new_brushstroke_points()
+
+        if len(new_points > 0):
+            self._update_mask(new_points)
+            mask_updated = True
+        else:
+            mask_updated = False
+
+        return mask_updated
+
+    def get_brush_mask(self):
+        return self._brush_mask, self._bounds_of_last_brush_update
+
+    def end_brushstroke(self):
+        self.current_brushstroke = None
+
+    def _update_mask(self, points):
+        """Update brush mask with filled in circles at given points."""
+
+        radius = self.current_brushstroke.radius
+        value = int(self.current_brushstroke.is_positive)
+
+        # Add padding when circle is partially outside of image
+        min_x, max_x = np.min(points[:, 0]), np.max(points[:, 0])
+        min_y, max_y = np.min(points[:, 1]), np.max(points[:, 1])
+
+        top, bottom = max(0, radius - min_y), max(0, max_y + radius + 1 - self.img_shape[0])
+        left, right = max(0, radius - min_x), max(0, max_x + radius + 1 - self.img_shape[1])
+        self._brush_mask = cv2.copyMakeBorder(self._brush_mask, top, bottom, left, right,
+                                              cv2.BORDER_CONSTANT, value=value)
+
+        for x, y in points:
+            cv2.circle(self._brush_mask, (x + left, y + top), radius, value, -1)
+
+        # Remove padding that may have been added
+        self._brush_mask = self._brush_mask[top:top+self.img_shape[0], left:left+self.img_shape[1]]
+
+        # Update bounds of last brush update
+        bound_x_1 = max(0, np.min(points[:, 0]) - radius)
+        bound_x_2 = min(self.img_shape[1], np.max(points[:, 0]) + radius) + 1
+        bound_y_1 = max(0, np.min(points[:, 1]) - radius)
+        bound_y_2 = min(self.img_shape[0], np.max(points[:, 1]) + radius) + 1
+        self._bounds_of_last_brush_update = dict(x1 = bound_x_1, x2 = bound_x_2,
+                                                 y1 = bound_y_1, y2 = bound_y_2)
+
+
 class Brushstroke:
     """Represents a continuous brushstroke on the image while the user is drawing."""
-    def __init__(self, probability, radius, img_shape):
-        self.probability = probability
+    def __init__(self, is_positive, radius, img_shape):
+        self.is_positive = is_positive
         self.vertices = None
         self.radius = radius
         self.img_h, self.img_w = img_shape
@@ -23,7 +104,7 @@ class Brushstroke:
         self._prev_coords = self._coords
         self._coords = coords
 
-    def get_new_brush_points(self):
+    def estimate_new_brushstroke_points(self):
         """
         Fits a line along brush points to estimate the brush stroke.
 
