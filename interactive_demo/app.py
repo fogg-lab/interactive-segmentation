@@ -1,5 +1,3 @@
-import time
-
 import tkinter as tk
 from tkinter import messagebox, filedialog, ttk
 
@@ -269,7 +267,7 @@ class InteractiveDemoApp(ttk.Frame):
         self._update_image()
 
     def _toggle_brush(self):
-        self.state['is_positive'].set(not self.state['is_positive'])
+        self.state['is_positive'].set(not self.state['is_positive'].get())
 
     def _change_brs_mode(self, *args):
         if self.state['brs_mode'].get() == 'NoBRS':
@@ -338,9 +336,9 @@ class InteractiveDemoApp(ttk.Frame):
     def _end_brushstroke_callback(self):
         self.controller.end_brushstroke()
 
-    def _update_image(self, reset_canvas=False, brush=None):
-        if (self.image_on_canvas is not None and brush is not None
-            and brush.current_brushstroke is not None):
+    def _update_image(self, reset_canvas=False):
+        if (self.image_on_canvas is not None and self.controller.brush is not None
+            and self.controller.brush.current_brushstroke is not None):
             canvas_img = self.image_on_canvas.get_original_canvas_image()
         else:
             canvas_img = None
@@ -348,7 +346,7 @@ class InteractiveDemoApp(ttk.Frame):
         image = self.controller.get_visualization(alpha_blend=self.state['alpha_blend'].get(),
                                                   click_radius=self.state['click_radius'].get(),
                                                   canvas_img=canvas_img,
-                                                  brush=brush)
+                                                  brush=self.controller.brush)
 
         if self.image_on_canvas is None:
             self.image_on_canvas = CanvasImage(self.canvas_frame, self.canvas)
@@ -360,7 +358,6 @@ class InteractiveDemoApp(ttk.Frame):
 
         if image is not None:
             self.image_on_canvas.reload_image(image, reset_canvas)
-
 
     def _set_click_dependent_widgets_state(self):
         after_1st_click_state = tk.NORMAL if self.controller.is_incomplete_mask else tk.DISABLED

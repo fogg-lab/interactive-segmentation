@@ -1,6 +1,7 @@
 from functools import lru_cache
 import cv2
 import numpy as np
+import time
 
 
 def visualize_instances(imask, bg_color=255,
@@ -109,7 +110,7 @@ def get_boundaries(instances_masks, boundaries_width=1):
 
 
 def draw_with_blend_and_clicks(img, mask=None, alpha=0.6, clicks_list=None,
-                               pos_color=(0, 255, 0), neg_color=(255, 0, 0),
+                               pos_color=(0, 255, 0), neg_color=(0, 0, 255),
                                radius=4, canvas_img=None, brush=None):
 
     if brush is not None:
@@ -135,6 +136,8 @@ def draw_with_blend_and_clicks(img, mask=None, alpha=0.6, clicks_list=None,
 
     if mask is not None:
         palette = get_palette(np.max(mask) + 1)
+        palette = np.flip(palette, 1)
+
         rgb_mask = palette[mask.astype(np.uint8)]
 
         mask_region = (mask > 0).astype(np.uint8)
@@ -142,11 +145,6 @@ def draw_with_blend_and_clicks(img, mask=None, alpha=0.6, clicks_list=None,
                   (1 - alpha) * mask_region[:, :, np.newaxis] * result + alpha * rgb_mask)
 
         result = result.astype(np.uint8)
-
-    def get_relative_click_coords(coords):
-        if not is_brush_update:
-            return coords
-        return (coords[0] - y1, coords[1] - x1)
 
     def is_in_bounds(coords):
         if not is_brush_update:
@@ -158,13 +156,16 @@ def draw_with_blend_and_clicks(img, mask=None, alpha=0.6, clicks_list=None,
         result = canvas_img
 
     if clicks_list is not None and len(clicks_list) > 0:
-        pos_points = [get_relative_click_coords(click.coords) for click in clicks_list
+        start = time.perf_counter_ns()
+        pos_points = [click.coords for click in clicks_list
                       if click.is_positive and is_in_bounds(click.coords)]
-        neg_points = [get_relative_click_coords(click.coords) for click in clicks_list
+        neg_points = [click.coords for click in clicks_list
                       if not click.is_positive and is_in_bounds(click.coords)]
 
         result = draw_points(result, pos_points, pos_color, radius=radius, inplace=True)
         result = draw_points(result, neg_points, neg_color, radius=radius, inplace=True)
+        end = time.perf_counter_ns()
+        print((end-start)/1e6)
 
     return result
 

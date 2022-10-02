@@ -5,10 +5,10 @@ import sys
 import time
 import math
 import tkinter as tk
-import cv2
 
 from tkinter import ttk
-from PIL import Image, ImageTk
+import numpy as np
+import cv2
 
 def handle_exception(exit_code=0):
     """ Use: @land.logger.handle_exception(0)
@@ -91,7 +91,6 @@ class CanvasImage:
         self._brush_callback = None
         self._end_brushstroke_callback = None
 
-        self.__original_image_ndarray = None
         self.__original_image = None
         self.__current_image = None
         self.imwidth = None
@@ -100,7 +99,6 @@ class CanvasImage:
         self.real_scale = None
         self._last_rb_click_time = None
         self._last_rb_click_event = None
-
 
     def register_click_callback(self,  click_callback):
         self._click_callback = click_callback
@@ -112,22 +110,22 @@ class CanvasImage:
         self._end_brushstroke_callback = end_brushstroke_callback
 
     def get_original_canvas_image(self):
-        return self.__original_image_ndarray
+        return self.__original_image
 
     def reload_image(self, image, reset_canvas=True):
-        self.__original_image_ndarray = image
-        self.__original_image = Image.fromarray(image)
-        self.__current_image = Image.fromarray(image)
+        self.__original_image = image
+        self.__current_image = image
 
         if reset_canvas:
-            #print("resetting canvas")
-            self.imwidth, self.imheight = self.__original_image.size
+            self.imheight, self.imwidth = self.__original_image.shape[:2]
 
-            scale = min(self.canvas.winfo_width() / self.imwidth, self.canvas.winfo_height() / self.imheight)
+            scale = min(self.canvas.winfo_width() / self.imwidth,
+                        self.canvas.winfo_height() / self.imheight)
             if self.container:
                 self.canvas.delete(self.container)
 
-            self.container = self.canvas.create_rectangle((0, 0, scale * self.imwidth, scale * self.imheight), width=0)
+            self.container = self.canvas.create_rectangle((0, 0, scale * self.imwidth,
+                                                          scale * self.imheight), width=0)
             self.current_scale = scale
             self._reset_canvas_offset()
 
@@ -141,6 +139,13 @@ class CanvasImage:
         self.__imframe.grid(sticky='nswe')  # make frame container sticky
         self.__imframe.rowconfigure(0, weight=1)  # make canvas expandable
         self.__imframe.columnconfigure(0, weight=1)
+
+    def _photo_image(self, image: np.ndarray):
+        height, width = image.shape[:2]
+        ppm_header = f'P6 {width} {height} 255 '.encode()
+        data = ppm_header + cv2.cvtColor(image, cv2.COLOR_BGR2RGB).tobytes()
+        result = tk.PhotoImage(width=width, height=height, data=data, format='PPM')
+        return result
 
     def __show_image(self):
         box_image = self.canvas.coords(self.container)  # get image area
@@ -173,25 +178,24 @@ class CanvasImage:
             sy1, sy2 = y1 / self.current_scale, y2 / self.current_scale
             crop_x, crop_y = max(0, math.floor(sx1 - border_width)), max(0, math.floor(sy1 - border_width))
             crop_w, crop_h = math.ceil(sx2 - sx1 + 2 * border_width), math.ceil(sy2 - sy1 + 2 * border_width)
-            crop_w = min(crop_w, self.__original_image.width - crop_x)
-            crop_h = min(crop_h, self.__original_image.height - crop_y)
-            __current_image = self.__original_image.crop((crop_x, crop_y,
-                                                          crop_x + crop_w, crop_y + crop_h))
+            crop_w = min(crop_w, self.__original_image.shape[1] - crop_x)
+            crop_h = min(crop_h, self.__original_image.shape[0] - crop_y)
+            __current_image = self.__original_image[crop_y:crop_y + crop_h, crop_x:crop_x + crop_w]
             crop_zw = int(round(crop_w * self.current_scale))
             crop_zh = int(round(crop_h * self.current_scale))
             zoom_sx, zoom_sy = crop_zw / crop_w, crop_zh / crop_h
             crop_zx, crop_zy = crop_x * zoom_sx, crop_y * zoom_sy
             self.real_scale = (zoom_sx, zoom_sy)
 
-            interpolation = Image.NEAREST
-            __current_image = __current_image.resize((crop_zw, crop_zh), interpolation)
+            __current_image = cv2.resize(__current_image, (crop_zw, crop_zh),
+                                         interpolation=cv2.INTER_NEAREST)
 
-            zx1, zy1 = x1 - crop_zx, y1 - crop_zy
-            zx2 = min(zx1 + self.canvas.winfo_width(), __current_image.width)
-            zy2 = min(zy1 + self.canvas.winfo_height(), __current_image.height)
+            zx1, zy1 = int(x1 - crop_zx), int(y1 - crop_zy)
+            zx2 = int(min(zx1 + self.canvas.winfo_width(), __current_image.shape[1]))
+            zy2 = int(min(zy1 + self.canvas.winfo_height(), __current_image.shape[0]))
+            self.__current_image = __current_image[zy1:zy2, zx1:zx2]
 
-            self.__current_image = __current_image.crop((zx1, zy1, zx2, zy2))
-            imagetk = ImageTk.PhotoImage(self.__current_image)
+            imagetk = self._photo_image(self.__current_image)
             imageid = self.canvas.create_image(max(box_canvas[0], box_img_int[0]),
                                                max(box_canvas[1], box_img_int[1]),
                                                anchor='nw', image=imagetk)
@@ -226,8 +230,8 @@ class CanvasImage:
         if new_scale > 20:
             return
 
-        if new_scale * self.__original_image.width < self.canvas.winfo_width() and \
-           new_scale * self.__original_image.height < self.canvas.winfo_height():
+        if (new_scale * self.__original_image.shape[1] < self.canvas.winfo_width() and
+            new_scale * self.__original_image.shape[0] < self.canvas.winfo_height()):
             return
 
         self.current_scale = new_scale
@@ -246,8 +250,10 @@ class CanvasImage:
         self.__show_image()  # redraw the image
 
     def __size_changed(self):
-        new_scale_w = self.canvas.winfo_width() / (self.current_scale * self.__original_image.width)
-        new_scale_h = self.canvas.winfo_height() / (self.current_scale * self.__original_image.height)
+        new_scale_w = self.canvas.winfo_width() / (self.current_scale * 
+                                                   self.__original_image.shape[1])
+        new_scale_h = self.canvas.winfo_height() / (self.current_scale *
+                                                    self.__original_image.shape[0])
         new_scale = min(new_scale_w, new_scale_h)
         if new_scale > 1.0:
             self._change_canvas_scale(new_scale)

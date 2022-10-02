@@ -68,7 +68,7 @@ class InteractiveController:
         else:
             self.probs_history.append((np.zeros_like(pred), pred))
 
-        self.update_image_callback(brush=self.brush)
+        self.update_image_callback()
 
     def draw_brush(self, x, y, is_positive, radius=20):
         if self.brush is None:
@@ -80,7 +80,7 @@ class InteractiveController:
         if not brush_mask_updated:
             return
 
-        self.update_image_callback(brush=self.brush)
+        self.update_image_callback()
 
     def end_brushstroke(self):
         if self.brush is not None:
@@ -96,7 +96,7 @@ class InteractiveController:
         self.probs_history.pop()
         if not self.probs_history:
             self.reset_init_mask()
-        self.update_image_callback(brush=self.brush)
+        self.update_image_callback()
 
     def partially_finish_object(self):
         object_prob = self.current_object_prob
@@ -109,7 +109,7 @@ class InteractiveController:
         self.clicker.reset_clicks()
         self.reset_predictor()
         self.reset_init_mask()
-        self.update_image_callback(brush=self.brush)
+        self.update_image_callback()
 
     def finish_object(self):
         if self.current_object_prob is None:
@@ -125,7 +125,6 @@ class InteractiveController:
         self.clicker.reset_clicks()
         self.reset_predictor()
         self.reset_init_mask()
-        self.brush = None
         if update_image:
             self.update_image_callback()
 
