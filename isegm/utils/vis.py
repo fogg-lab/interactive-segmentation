@@ -1,7 +1,6 @@
 from functools import lru_cache
 import cv2
 import numpy as np
-import time
 
 
 def visualize_instances(imask, bg_color=255,
@@ -156,7 +155,6 @@ def draw_with_blend_and_clicks(img, mask=None, alpha=0.6, clicks_list=None,
         result = canvas_img
 
     if clicks_list is not None and len(clicks_list) > 0:
-        start = time.perf_counter_ns()
         pos_points = [click.coords for click in clicks_list
                       if click.is_positive and is_in_bounds(click.coords)]
         neg_points = [click.coords for click in clicks_list
@@ -164,8 +162,6 @@ def draw_with_blend_and_clicks(img, mask=None, alpha=0.6, clicks_list=None,
 
         result = draw_points(result, pos_points, pos_color, radius=radius, inplace=True)
         result = draw_points(result, neg_points, neg_color, radius=radius, inplace=True)
-        end = time.perf_counter_ns()
-        print((end-start)/1e6)
 
     return result
 
