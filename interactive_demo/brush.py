@@ -11,15 +11,15 @@ class Brush:
         self.img_shape = img_shape
         self._bounds_of_last_brush_update = None
 
-    def start_brushstroke(self, is_positive, radius):
+    def start_brushstroke(self, value: int, radius):
         """
         Start a new brushstroke.
 
         Args:
-            is_positive (bool): True if brushstroke is positive, False if negative
+            value (int): value of the brushstroke - 0 for background, 1 for tube, or 2 for agnostic value
             radius (int): Radius of the brushstroke
         """
-        self.current_brushstroke = Brushstroke(is_positive, radius, self.img_shape)
+        self.current_brushstroke = Brushstroke(value, radius, self.img_shape)
 
     def add_brushstroke_point(self, coords):
         """
@@ -56,7 +56,7 @@ class Brush:
         """Update brush mask with filled in circles at given points."""
 
         radius = self.current_brushstroke.radius
-        value = int(self.current_brushstroke.is_positive)
+        value = self.current_brushstroke.value
 
         # Add padding when circle is partially outside of image
         min_x, max_x = np.min(points[:, 0]), np.max(points[:, 0])
@@ -64,9 +64,11 @@ class Brush:
 
         top, bottom = max(0, radius - min_y), max(0, max_y + radius + 1 - self.img_shape[0])
         left, right = max(0, radius - min_x), max(0, max_x + radius + 1 - self.img_shape[1])
+        print(value)
         self._brush_mask = cv2.copyMakeBorder(self._brush_mask, top, bottom, left, right,
                                               cv2.BORDER_CONSTANT, value=value)
 
+        print(f"{value = }")
         for x, y in points:
             cv2.circle(self._brush_mask, (x + left, y + top), radius, value, -1)
 
@@ -84,8 +86,8 @@ class Brush:
 
 class Brushstroke:
     """Represents a continuous brushstroke on the image while the user is drawing."""
-    def __init__(self, is_positive, radius, img_shape):
-        self.is_positive = is_positive
+    def __init__(self, value: int, radius, img_shape):
+        self.value = value
         self.vertices = None
         self.radius = radius
         self.img_h, self.img_w = img_shape

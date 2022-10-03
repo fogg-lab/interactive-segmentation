@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
+# import pickle
 
 from isegm.inference.transforms import SigmoidForPred, LimitLongestSide
 from isegm.utils.crop_local import map_point_in_bbox
@@ -79,11 +80,20 @@ class BaselinePredictor(object):
         prediction = F.interpolate(pred_logits, mode='bilinear', align_corners=True,
                                    size=image_nd.size()[2:])
 
+        # prediction = self.get_tube_region(prediction)
+
         for t in reversed(self.transforms):
             prediction = t.inv_transform(prediction)
 
         self.prev_prediction = prediction
         return prediction.cpu().numpy()[0, 0]
+
+    # def get_tube_region(self, prediction):
+        # with open('prediction.pkl', 'wb') as f:
+        #     pickle.dump(prediction, f)
+        # in a jupyter notebook you can load it with:
+        # with open('prediction.pkl', 'rb') as f:
+        #     prediction = pickle.load(f)
 
     def _get_prediction(self, image_nd, clicks_lists):
         points_nd = self.get_points_nd(clicks_lists)

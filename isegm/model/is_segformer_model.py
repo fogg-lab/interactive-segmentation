@@ -30,7 +30,7 @@ class SegFormerModel(ISModel):
         
         self.dist_maps_base = DistMaps(norm_radius=base_radius, spatial_scale=1.0,
                                       cpu_mode=False, use_disks=True)
-        
+
         self.dist_maps_refine = DistMaps(norm_radius=5, spatial_scale=1.0,
                                       cpu_mode=False, use_disks=True)
 
@@ -39,7 +39,7 @@ class SegFormerModel(ISModel):
         else:
             feature_indim = 512
         self.refiner = RefineLayer(feature_indim = feature_indim)
-        
+
         mt_layers = [
                 nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=2, padding=1),
                 nn.LeakyReLU(negative_slope=0.2),

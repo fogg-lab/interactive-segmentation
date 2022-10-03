@@ -29,6 +29,7 @@ class InteractiveDemoApp(ttk.Frame):
         self.pack(fill="both", expand=True)
 
         self.brs_modes = ['NoBRS', 'RGB-BRS', 'DistMap-BRS', 'f-BRS-A', 'f-BRS-B', 'f-BRS-C']
+        self.brush_modes = ['Tube', 'Background', 'Erase']
         self.limit_longest_size = args.limit_longest_size
 
         self.controller = InteractiveController(model, args.device,
@@ -53,6 +54,8 @@ class InteractiveDemoApp(ttk.Frame):
         self.state['lbfgs_max_iters'].trace(mode='w', callback=self._change_brs_mode)
         self._change_brs_mode()
 
+        self.brush_value = self.state['brush_mode'].get()
+
         self.image_on_canvas = None
 
         self._image_path = None
@@ -76,6 +79,7 @@ class InteractiveDemoApp(ttk.Frame):
             'alpha_blend': tk.DoubleVar(value=0.5),
             'is_positive': tk.BooleanVar(value=True),
             'click_radius': tk.IntVar(value=3),
+            'brush_mode': tk.IntVar(value=1),
         }
 
     def _add_menu(self):
@@ -200,6 +204,12 @@ class InteractiveDemoApp(ttk.Frame):
                              command=self._update_brush_size, variable=self.state['brush_size']
                             ).pack(padx=10)
 
+        self.click_update_size_frame = FocusLabelFrame(master, text="Size of click update region")
+        self.click_update_size_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
+        FocusHorizontalScale(self.click_update_size_frame, from_=32, to=512, resolution=1,
+                             command=self._update_click_area, variable=self.state['zoomin_params']['target_size']
+                            ).pack(padx=10)
+
         self.alpha_blend_frame = FocusLabelFrame(master, text="Alpha blending coefficient")
         self.alpha_blend_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
         FocusHorizontalScale(self.alpha_blend_frame, from_=0.0, to=1.0,
@@ -216,6 +226,31 @@ class InteractiveDemoApp(ttk.Frame):
                                                bg='#ea9999', fg='black', width=10, height=2,
                                                state=tk.NORMAL, command=self._toggle_brush)
         self.toggle_brush_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
+
+
+        self.brush_options_frame = FocusLabelFrame(master, text="Brush Options")
+        self.brush_options_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
+        menu = tk.OptionMenu(self.brush_options_frame, self.state['brush_mode'],
+                             *self.brush_modes, command=self._change_brush_mode)
+        menu.config(width=11)
+        menu.grid(rowspan=2, column=0, padx=10)
+        self.net_clicks_label = tk.Label(self.brs_options_frame, text="Network clicks")
+        self.net_clicks_label.grid(row=0, column=1, pady=2, sticky='e')
+        self.net_clicks_entry = BoundedNumericalEntry(self.brs_options_frame,
+                                                      variable=self.state['net_clicks_limit'],
+                                                      min_value=0, max_value=None, vartype=int,
+                                                      allow_inf=True, name='net_clicks_limit')
+        self.net_clicks_entry.grid(row=0, column=2, padx=10, pady=2, sticky='w')
+        self.lbfgs_iters_label = tk.Label(self.brs_options_frame, text="L-BFGS\nmax iterations")
+        self.lbfgs_iters_label.grid(row=1, column=1, pady=2, sticky='e')
+        self.lbfgs_iters_entry = BoundedNumericalEntry(self.brs_options_frame,
+                                                       variable=self.state['lbfgs_max_iters'],
+                                                       min_value=1, max_value=1000, vartype=int,
+                                                       name='lbfgs_max_iters')
+
+        self.lbfgs_iters_entry.grid(row=1, column=2, padx=10, pady=2, sticky='w')
+        self.brush_options_frame.columnconfigure((0, 1), weight=1)
+
 
     def _load_image_callback(self):
         self.menubar.focus_set()
@@ -307,11 +342,23 @@ class InteractiveDemoApp(ttk.Frame):
     def _update_blend_alpha(self, value):
         self._update_image()
 
+    def _update_click_area(self, value):
+        self.state['zoomin_params']['target_size'] = tk.IntVar(value=value)
+
     def _update_click_radius(self, *args):
         if self.image_on_canvas is None:
             return
 
         self._update_image()
+
+    def _change_brush_mode(self, value):
+        if value == "Tube":
+            self.brush_value = 1
+        elif value == 'Background':
+            self.brush_value = 0
+        elif value == 'Erase':
+            self.brush_value = 2
+        self.state['brush_mode'] = tk.IntVar(value=self.brush_value) 
 
     def _toggle_brush(self):
         self.state['is_positive'].set(not self.state['is_positive'].get())
@@ -378,7 +425,7 @@ class InteractiveDemoApp(ttk.Frame):
             return
 
         if self._check_entry(self):
-            self.controller.draw_brush(x, y, self.state['is_positive'].get(),
+            self.controller.draw_brush(x, y, self.brush_value,
                                        self.state['brush_size'].get())
 
     def _end_brushstroke_callback(self):

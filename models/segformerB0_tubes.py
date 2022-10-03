@@ -83,7 +83,6 @@ def train(model, cfg, model_cfg):
         'lr': 5e-3, 'betas': (0.9, 0.999), 'eps': 1e-8
     }
 
-
     lr_scheduler = partial(torch.optim.lr_scheduler.MultiStepLR,
                            milestones=[190, 210], gamma=0.1)
     trainer = ISTrainer(model, cfg, model_cfg, loss_cfg,
