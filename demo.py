@@ -44,6 +44,10 @@ def parse_args():
                         help='If the largest side of an image exceeds this value, '
                              'it is resized so that its largest side is equal to this value.')
 
+    parser.add_argument('--debug', action='store_true', default=False, help='Debug mode.')
+
+    parser.add_argument('--timing', action='store_true', default=False, help='Performance timing.')
+
     args = parser.parse_args()
     if args.cpu:
         args.device = torch.device('cpu')
