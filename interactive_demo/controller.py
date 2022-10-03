@@ -75,12 +75,13 @@ class InteractiveController:
             self.brush = Brush(self.image.shape[:2])
         if self.brush.current_brushstroke is None:
             self.brush.start_brushstroke(is_positive, radius)
-
         brush_mask_updated = self.brush.add_brushstroke_point((x, y))
         if not brush_mask_updated:
             return
-
         self.update_image_callback()
+        #end = time.perf_counter_ns()
+        #print(f"Update time: {(end - start) / 1e6} ms")
+
 
     def end_brushstroke(self):
         if self.brush is not None:
