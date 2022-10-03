@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 import tkinter as tk
 from tkinter import messagebox, filedialog, ttk
@@ -53,6 +54,9 @@ class InteractiveDemoApp(ttk.Frame):
         self._change_brs_mode()
 
         self.image_on_canvas = None
+
+        self._image_path = None
+        self._mask_path = None
 
     def _init_state(self):
         self.state = {
@@ -217,11 +221,12 @@ class InteractiveDemoApp(ttk.Frame):
         self.menubar.focus_set()
         if self._check_entry(self):
             filename = filedialog.askopenfilename(parent=self.master, filetypes=[
-                ("Images", "*.jpg *.jpeg *.png *.bmp *.tif, *.tiff"),
+                ("Images", "*.jpg *.jpeg *.png *.bmp *.tif *.tiff"),
                 ("All files", "*.*"),
             ], title="Chose an image")
 
             if len(filename) > 0:
+                self._image_path = Path(filename)
                 image = cv2.cvtColor(cv2.imread(filename, 0), cv2.COLOR_GRAY2RGB)
                 self.controller.set_image(image)
                 self.save_mask_btn.configure(state=tk.NORMAL)
@@ -234,14 +239,18 @@ class InteractiveDemoApp(ttk.Frame):
             if mask is None:
                 return
 
+            if self._mask_path is not None:
+                initial_filename = self._mask_path.name
+            elif self._image_path is not None:
+                initial_filename = f"{self._image_path.stem}_mask{self._image_path.suffix}"
+            else:
+                initial_filename = "mask.png"
+
             filename = filedialog.asksaveasfilename(
                 parent=self.master,
-                initialfile='mask.png',
+                initialfile=initial_filename,
                 filetypes=[
-                    ("PNG image", "*.png"),
-                    ("TIF image", "*.tif"),
-                    ("TIFF image", "*.tiff"),
-                    ("BMP image", "*.bmp"),
+                    ("Images", "*.jpg *.jpeg *.png *.bmp *.tif *.tiff"),
                     ("All files", "*.*"),
                 ], title="Save the current mask as...")
 
@@ -261,11 +270,12 @@ class InteractiveDemoApp(ttk.Frame):
         self.menubar.focus_set()
         if self._check_entry(self):
             filename = filedialog.askopenfilename(parent=self.master, filetypes=[
-                ("Binary mask (png, bmp)", "*.png *.bmp"),
+                ("Images", "*.jpg *.jpeg *.png *.bmp *.tif *.tiff"),
                 ("All files", "*.*"),
             ], title="Chose an image")
 
             if len(filename) > 0:
+                self._mask_path = filename
                 mask = cv2.imread(filename)[:, :, 0] > 127
                 self.controller.set_mask(mask)
                 self._update_image()
