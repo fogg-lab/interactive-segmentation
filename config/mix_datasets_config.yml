@@ -3,7 +3,7 @@
 # "path/to/dataset2": 0.3 # ~30% of training samples will be from this dataset
 # "path/to/dataset3": 0.2 # ~20% of training samples will be from this dataset
 
-"/media/bean/shared/data/training_set/branching": 0.5
-"/media/bean/shared/data/training_set/retinal/hrf": 0.25
-"/media/bean/shared/data/training_set/retinal/drive": 0.125
-"/media/bean/shared/data/training_set/retinal/chase_db1": 0.125
+"/media/bean/shared/data/training_set/branching": 0.4
+"/media/bean/shared/data/training_set/retinal/hrf": 0.35
+"/media/bean/shared/data/training_set/retinal/drive": 0.1
+"/media/bean/shared/data/training_set/retinal/chase_db1": 0.15
