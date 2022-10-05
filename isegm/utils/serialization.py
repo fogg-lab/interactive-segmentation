@@ -15,7 +15,7 @@ def serialize(init):
 
         config = {
             'class': get_classname(self.__class__),
-            'params': dict()
+            'params': {}
         }
         specified_params = set(params.keys())
 
@@ -45,7 +45,7 @@ def load_model(config, **kwargs):
     model_class = get_class_from_str(config['class'])
     model_default_params = get_default_params(model_class)
 
-    model_args = dict()
+    model_args = {}
     for pname, param in config['params'].items():
         value = param['value']
         if param['type'] == 'class':
@@ -78,7 +78,7 @@ def get_config_repr(config):
 
 
 def get_default_params(some_class):
-    params = dict()
+    params = {}
     for mclass in some_class.mro():
         if mclass is nn.Module or mclass is object:
             continue

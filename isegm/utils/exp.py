@@ -161,7 +161,7 @@ def load_config(model_path):
     if config_path.exists():
         cfg = load_config_file(config_path)
     else:
-        cfg = dict()
+        cfg = {}
 
     cwd = Path.cwd()
     config_parent = config_path.parent.absolute()

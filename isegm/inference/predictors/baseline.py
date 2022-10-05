@@ -1,3 +1,5 @@
+import pickle
+
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
@@ -84,6 +86,9 @@ class BaselinePredictor(object):
 
         for t in reversed(self.transforms):
             prediction = t.inv_transform(prediction)
+            if t == self.transforms[1]:
+                with open('prediction.pkl', 'wb') as f:
+                    pickle.dump(prediction.cpu().numpy()[0, 0], f)
 
         self.prev_prediction = prediction
         return prediction.cpu().numpy()[0, 0]
@@ -194,9 +199,6 @@ class BaselinePredictor(object):
             'transform_states': self._get_transform_states(),
             'prev_prediction': self.prev_prediction.clone()
         }
-
-    def get_current_prediction(self):
-        return self.prev_prediction.cpu().numpy()[0, 0]
 
     def set_states(self, states):
         self._set_transform_states(states['transform_states'])

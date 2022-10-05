@@ -21,10 +21,9 @@ class ProportionalComposeDataset(ISDataset):
     def __init__(self, datasets, ratios, **kwargs):
         super().__init__(**kwargs)
 
-        assert len(ratios) == len(datasets),\
-            "The number of datasets must match the number of ratios"
-        assert isclose(sum(ratios), 1.0),\
-            "The sum of ratios must be equal to 1"
+        assert len(ratios) == len(datasets), ("The number of datasets must match "
+                                              "the number of ratios")
+        assert isclose(sum(ratios), 1.0), "The sum of ratios must be equal to 1"
 
         self._ratios = ratios
         self._datasets = datasets

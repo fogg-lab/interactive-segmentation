@@ -165,6 +165,7 @@ def draw_with_blend_and_clicks(img, mask=None, alpha=0.6, clicks_list=None,
 
     return result
 
+
 def add_tag(image, tag = 'nodefined', tag_h = 40):
     image = image.astype(np.uint8)
     W = image.shape[1]

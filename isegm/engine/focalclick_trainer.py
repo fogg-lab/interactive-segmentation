@@ -257,7 +257,7 @@ class ISTrainer(object):
 
     def batch_forward(self, batch_data, validation=False):
         metrics = self.val_metrics if validation else self.train_metrics
-        losses_logging = dict()
+        losses_logging = {}
 
         with torch.set_grad_enabled(not validation):
             batch_data = {k: v.to(self.device) for k, v in batch_data.items()}

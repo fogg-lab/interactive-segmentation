@@ -52,7 +52,7 @@ class SummaryWriterAvg(SummaryWriter):
     def __init__(self, *args, dump_period=20, **kwargs):
         super().__init__(*args, **kwargs)
         self._dump_period = dump_period
-        self._avg_scalars = dict()
+        self._avg_scalars = {}
 
     def add_scalar(self, tag, value, global_step=None, disable_avg=False):
         if disable_avg or isinstance(value, (tuple, list, dict)):
