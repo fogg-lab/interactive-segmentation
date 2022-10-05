@@ -290,6 +290,10 @@ class InteractiveDemoApp(ttk.Frame):
                 ], title="Save the current mask as...")
 
             if len(filename) > 0:
+                brush = self.controller.brush
+                if brush is not None:
+                    brush_mask = self.controller.brush.get_brush_mask()[0]
+                    mask[brush_mask<2] = brush_mask[brush_mask<2]
                 if mask.max() < 256:
                     mask = mask.astype(np.uint8)
                     mask *= 255 // mask.max()

@@ -64,11 +64,9 @@ class Brush:
 
         top, bottom = max(0, radius - min_y), max(0, max_y + radius + 1 - self.img_shape[0])
         left, right = max(0, radius - min_x), max(0, max_x + radius + 1 - self.img_shape[1])
-        print(value)
         self._brush_mask = cv2.copyMakeBorder(self._brush_mask, top, bottom, left, right,
                                               cv2.BORDER_CONSTANT, value=value)
 
-        print(f"{value = }")
         for x, y in points:
             cv2.circle(self._brush_mask, (x + left, y + top), radius, value, -1)
 
