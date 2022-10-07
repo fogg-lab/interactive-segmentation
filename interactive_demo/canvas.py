@@ -71,6 +71,7 @@ class CanvasImage:
         self.canvas.bind('<Configure>', lambda event: self.__size_changed())  # canvas is resized
         self.canvas.bind('<ButtonPress-1>', self.__left_mouse_button_pressed)  # remember canvas position
         self.canvas.bind('<B1-Motion>', self.__left_mouse_button_motion) # activate brush tool if left button pressed and held
+        self.canvas.bind('<Motion>', self.__show_brush_pointer)
         self.canvas.bind('<ButtonPress-3>', self.__right_mouse_button_pressed)  # remember canvas position
         self.canvas.bind('<ButtonPress-2>', self.__right_mouse_button_pressed)  # remember canvas position (MacOS)
         self.canvas.bind('<ButtonRelease-3>', self.__right_mouse_button_released)  # remember canvas position
@@ -82,8 +83,6 @@ class CanvasImage:
         self.canvas.bind('<Button-5>', self.__wheel)  # zoom for Linux, wheel scroll down
         self.canvas.bind('<Button-4>', self.__wheel)  # zoom for Linux, wheel scroll up
 
-        # Handle keystrokes in idle mode, because program slows down on a weak computers,
-        # when too many key stroke events in the same time
         self.canvas.bind('<Key>', lambda event: self.canvas.after_idle(self.__keystroke, event))
         self.container = None
 
@@ -108,6 +107,9 @@ class CanvasImage:
     
     def register_end_brushstroke_callback(self,  end_brushstroke_callback):
         self._end_brushstroke_callback = end_brushstroke_callback
+
+    def register_brush_pointer_callback(self, show_brush_pointer_callback):
+        self._show_brush_pointer_callback = show_brush_pointer_callback
 
     def get_original_canvas_image(self):
         return self.__original_image
@@ -276,6 +278,22 @@ class CanvasImage:
         self._change_canvas_scale(scale, x, y)
         self.__show_image()
 
+    def __show_brush_pointer(self, event):
+        # (if in brush mode)
+        self.canvas.config(cursor="none")
+        x = self.canvas.canvasx(event.x)
+        y = self.canvas.canvasy(event.y)
+        self._show_brush_pointer_callback(x, y)
+
+    def show_brush_pointer(self, x, y, radius):
+        # Create oval
+        self.canvas.delete('brush-pointer')
+        radius_x = radius * self.real_scale[0]
+        radius_y = radius * self.real_scale[1]
+        x0, x1 = x - radius_x, x + radius_x
+        y0, y1 = y - radius_y, y + radius_y
+        self.canvas.create_oval(x0, y0, x1, y1, tags="brush-pointer")
+
     def __left_mouse_button_pressed(self, event):
         """ Remember previous coordinates for scrolling with the mouse """
         self._last_rb_click_time = time.time()
@@ -341,6 +359,12 @@ class CanvasImage:
 
         if coords is not None:
             self.__brush_tool(coords)
+            
+        self.canvas.config(cursor="none")
+        x = self.canvas.canvasx(event.x)
+        y = self.canvas.canvasy(event.y)
+        self._show_brush_pointer_callback(x, y)
+
 
     def __brush_tool(self, coords):
         self._brush_callback(x=coords[0], y=coords[1])  

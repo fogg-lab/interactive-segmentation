@@ -342,6 +342,7 @@ class InteractiveDemoApp(ttk.Frame):
 
     def _update_brush_size(self, value):
         self.state['brush_size'] = tk.IntVar(value=value)
+        
 
     def _update_blend_alpha(self, value):
         self._update_image()
@@ -432,6 +433,11 @@ class InteractiveDemoApp(ttk.Frame):
             self.controller.draw_brush(x, y, self.brush_value,
                                        self.state['brush_size'].get())
 
+    def _show_brush_pointer_callback(self, x, y):
+
+        # if brush mode is activated:
+        self.image_on_canvas.show_brush_pointer(x, y, self.state['brush_size'].get())
+
     def _end_brushstroke_callback(self):
         self.controller.end_brushstroke()
 
@@ -459,6 +465,7 @@ class InteractiveDemoApp(ttk.Frame):
             self.image_on_canvas.register_click_callback(self._click_callback)
             self.image_on_canvas.register_brush_callback(self._brush_callback)
             self.image_on_canvas.register_end_brushstroke_callback(self._end_brushstroke_callback)
+            self.image_on_canvas.register_brush_pointer_callback(self._show_brush_pointer_callback)
 
         self._set_click_dependent_widgets_state()
 
