@@ -279,8 +279,6 @@ class CanvasImage:
         self.__show_image()
 
     def __show_brush_pointer(self, event):
-        # (if in brush mode)
-        self.canvas.config(cursor="none")
         x = self.canvas.canvasx(event.x)
         y = self.canvas.canvasy(event.y)
         self._show_brush_pointer_callback(x, y)
@@ -359,15 +357,13 @@ class CanvasImage:
 
         if coords is not None:
             self.__brush_tool(coords)
-            
-        self.canvas.config(cursor="none")
+
         x = self.canvas.canvasx(event.x)
         y = self.canvas.canvasy(event.y)
         self._show_brush_pointer_callback(x, y)
 
-
     def __brush_tool(self, coords):
-        self._brush_callback(x=coords[0], y=coords[1])  
+        self._brush_callback(x=coords[0], y=coords[1])
 
     def outside(self, x, y):
         """ Checks if the point (x,y) is outside the image area """
@@ -377,7 +373,7 @@ class CanvasImage:
         else:
             return True  # point (x,y) is outside the image area
 
-    # ================================================= Keys Callback ==================================================
+    # =================================== Keys Callback =======================================
     def __keystroke(self, event):
         """ Scrolling with the keyboard.
             Independent from the language of the keyboard, CapsLock, <Ctrl>+<key>, etc. """

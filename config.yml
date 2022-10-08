@@ -1,11 +1,5 @@
-checkpoint-path: .\experiments\segformerB0_tubes\000_segformerB0_tubes\checkpoints\225.pth
-
-torch-device: cpu # 'cpu' or 'gpu' is supported
-
-gpu: 0
-
+checkpoint-path: ./experiments/segformerB0_tubes/000_segformerB0_tubes/checkpoints/225.pth
+cpu: True
+gpu: 0  # to use gpu, set cpu: False and gpu: <gpu_id>
 debug: False
-
 timing: False
-
-limit-longest-size: 960

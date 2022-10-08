@@ -37,16 +37,15 @@ def parse_args():
     args = parser.parse_args()
 
     args.checkpoint = config['checkpoint-path']
-    args.gpu = config['gpu']
-    args.cpu = (config['torch-device'] == 'cpu')
+    args.gpu = config.get('gpu')
+    args.cpu = config.get('cpu', "true")
     args.debug = config['debug']
     args.timing = config['timing']
-    args.limit_longest_size = config['limit-longest-size']
 
-    if args.cpu:
-        args.device = torch.device('cpu')
-    else:
+    if args.gpu is not None and not args.cpu:
         args.device = torch.device(f'cuda:{args.gpu}')
+    else:
+        args.device = torch.device('cpu')
 
     return args
 

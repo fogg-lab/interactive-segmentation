@@ -143,8 +143,8 @@ def check_object_roi(object_roi, clicks_list):
 def get_object_roi(image_nd, click_y, click_x, target_size):
     img_h = image_nd.shape[2]
     img_w = image_nd.shape[3]
-    crop_h = target_size[0]
-    crop_w = target_size[0]
+    crop_h = target_size
+    crop_w = target_size
     crop_start_x = max(0, click_x - crop_w // 2)
     crop_start_x = min(img_w - crop_w, crop_start_x)
     crop_start_y = max(0, click_y - crop_h // 2)
