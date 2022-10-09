@@ -9,8 +9,7 @@ import numpy as np
 
 from interactive_demo.canvas import CanvasImage
 from interactive_demo.controller import InteractiveController
-from interactive_demo.wrappers import (BoundedNumericalEntry, FocusHorizontalScale,
-                                      FocusCheckButton, FocusButton, FocusLabelFrame)
+from interactive_demo.wrappers import (FocusHorizontalScale, FocusButton, FocusLabelFrame)
 
 class InteractiveDemoApp(ttk.Frame):
     def __init__(self, master, args, model):
@@ -28,13 +27,13 @@ class InteractiveDemoApp(ttk.Frame):
         master.geometry(f"+{int(x)}+{int(y)}")
         self.pack(fill="both", expand=True)
 
-        self.brs_modes = ['NoBRS', 'RGB-BRS', 'DistMap-BRS', 'f-BRS-A', 'f-BRS-B', 'f-BRS-C']
-        self.brush_modes = ['Tube', 'Background', 'Erase']
-        self.limit_longest_size = args.limit_longest_size
+        self.brush_modes = ['Foreground', 'Background', 'Erase Brushstrokes']
 
         self.controller = InteractiveController(model, args.device,
                                                 predictor_params={'brs_mode': 'NoBRS'},
                                                 update_image_callback=self._update_image)
+
+        self.click_update_size_slider = None
 
         self._init_state()
         self._add_menu()
@@ -45,18 +44,16 @@ class InteractiveDemoApp(ttk.Frame):
         master.bind('a', lambda event: self.controller.partially_finish_object())
 
         self.state['zoomin_params']['skip_clicks'].trace(mode='w',
-                                                         callback=self._reset_predictor)
+                                                         callback=self._update_zoom_in)
         self.state['zoomin_params']['target_size'].trace(mode='w',
-                                                         callback=self._reset_predictor)
+                                                         callback=self._update_zoom_in)
         self.state['zoomin_params']['expansion_ratio'].trace(mode='w',
-                                                             callback=self._reset_predictor)
-        self.state['net_clicks_limit'].trace(mode='w', callback=self._change_brs_mode)
-        self.state['lbfgs_max_iters'].trace(mode='w', callback=self._change_brs_mode)
-        self._change_brs_mode()
+                                                             callback=self._update_zoom_in)
 
-        self.brush_value = self.state['brush_mode'].get()
+        self.brush_value = 1
 
         self.image_on_canvas = None
+        self._reset_predictor()
 
         self._image_path = None
         self._mask_path = None
@@ -67,19 +64,16 @@ class InteractiveDemoApp(ttk.Frame):
                 'use_zoom_in': tk.BooleanVar(value=True),
                 'fixed_crop': tk.BooleanVar(value=True),
                 'skip_clicks': tk.IntVar(value=-1),
-                'target_size': tk.IntVar(value=min(256, self.limit_longest_size)),
+                'target_size': tk.IntVar(value=256),
                 'expansion_ratio': tk.DoubleVar(value=1.0)
             },
 
-            'net_clicks_limit': tk.IntVar(value=8),
-            'brs_mode': tk.StringVar(value='NoBRS'),
             'prob_thresh': tk.DoubleVar(value=0.5),
-            'lbfgs_max_iters': tk.IntVar(value=20),
-            'brush_size': tk.IntVar(value=1), # Initialize brush size to 1
+            'brush_size': tk.IntVar(value=10), # Initialize brush size to 10
             'alpha_blend': tk.DoubleVar(value=0.5),
-            'is_positive': tk.BooleanVar(value=True),
+            'brush_on': tk.BooleanVar(value=False),
             'click_radius': tk.IntVar(value=3),
-            'brush_mode': tk.IntVar(value=1),
+            'brush_mode': tk.IntVar(value="Foreground"),
         }
 
     def _add_menu(self):
@@ -108,7 +102,7 @@ class InteractiveDemoApp(ttk.Frame):
         self.canvas_frame.rowconfigure(0, weight=1)
         self.canvas_frame.columnconfigure(0, weight=1)
 
-        self.canvas = tk.Canvas(self.canvas_frame, highlightthickness=0, cursor="hand1",
+        self.canvas = tk.Canvas(self.canvas_frame, highlightthickness=0, cursor="tcross",
                                 width=400, height=400)
         self.canvas.grid(row=0, column=0, sticky='nswe', padx=5, pady=5)
 
@@ -122,11 +116,6 @@ class InteractiveDemoApp(ttk.Frame):
 
         self.clicks_options_frame = FocusLabelFrame(master, text="Clicks management")
         self.clicks_options_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
-        self.finish_object_button = FocusButton(self.clicks_options_frame, text='Finish\nobject',
-                                                bg='#b6d7a8', fg='black',
-                                                width=10, height=2, state=tk.DISABLED,
-                                                command=self.controller.finish_object)
-        self.finish_object_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
         self.undo_click_button = FocusButton(self.clicks_options_frame, text='Undo click',
                                              bg='#ffe599', fg='black', width=10, height=2,
                                              state=tk.DISABLED, command=self.controller.undo_click)
@@ -136,61 +125,6 @@ class InteractiveDemoApp(ttk.Frame):
                                                bg='#ea9999', fg='black', width=10, height=2,
                                                state=tk.DISABLED, command=self._reset_last_object)
         self.reset_clicks_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
-
-        self.zoomin_options_frame = FocusLabelFrame(master, text="ZoomIn options")
-        self.zoomin_options_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
-        FocusCheckButton(self.zoomin_options_frame, text='Use ZoomIn',
-                         command=self._reset_predictor,
-                         variable=self.state['zoomin_params']['use_zoom_in']
-                        ).grid(row=0, column=0, padx=10)
-        FocusCheckButton(self.zoomin_options_frame, text='Fixed crop',
-                         command=self._reset_predictor,
-                         variable=self.state['zoomin_params']['fixed_crop']
-                        ).grid(row=1, column=0, padx=10)
-        tk.Label(self.zoomin_options_frame, text="Skip clicks").grid(row=0, column=1,
-                                                                     pady=1, sticky='e')
-        tk.Label(self.zoomin_options_frame, text="Target size").grid(row=1, column=1,
-                                                                     pady=1, sticky='e')
-        tk.Label(self.zoomin_options_frame, text="Expand ratio").grid(row=2, column=1,
-                                                                      pady=1, sticky='e')
-        BoundedNumericalEntry(self.zoomin_options_frame,
-                              variable=self.state['zoomin_params']['skip_clicks'],
-                              min_value=-1, max_value=None, vartype=int,
-                              name='zoom_in_skip_clicks').grid(row=0, column=2, padx=10,
-                                                               pady=1, sticky='w')
-        BoundedNumericalEntry(self.zoomin_options_frame,
-                              variable=self.state['zoomin_params']['target_size'],
-                              min_value=100, max_value=self.limit_longest_size, vartype=int,
-                              name='zoom_in_target_size').grid(row=1, column=2,
-                                                               padx=10, pady=1, sticky='w')
-        BoundedNumericalEntry(self.zoomin_options_frame,
-                              variable=self.state['zoomin_params']['expansion_ratio'],
-                              min_value=1.0, max_value=2.0, vartype=float,
-                              name='zoom_in_expansion_ratio').grid(row=2, column=2,
-                                                                   padx=10, pady=1, sticky='w')
-        self.zoomin_options_frame.columnconfigure((0, 1, 2), weight=1)
-
-        self.brs_options_frame = FocusLabelFrame(master, text="BRS options")
-        self.brs_options_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
-        menu = tk.OptionMenu(self.brs_options_frame, self.state['brs_mode'],
-                             *self.brs_modes, command=self._change_brs_mode)
-        menu.config(width=11)
-        menu.grid(rowspan=2, column=0, padx=10)
-        self.net_clicks_label = tk.Label(self.brs_options_frame, text="Network clicks")
-        self.net_clicks_label.grid(row=0, column=1, pady=2, sticky='e')
-        self.net_clicks_entry = BoundedNumericalEntry(self.brs_options_frame,
-                                                      variable=self.state['net_clicks_limit'],
-                                                      min_value=0, max_value=None, vartype=int,
-                                                      allow_inf=True, name='net_clicks_limit')
-        self.net_clicks_entry.grid(row=0, column=2, padx=10, pady=2, sticky='w')
-        self.lbfgs_iters_label = tk.Label(self.brs_options_frame, text="L-BFGS\nmax iterations")
-        self.lbfgs_iters_label.grid(row=1, column=1, pady=2, sticky='e')
-        self.lbfgs_iters_entry = BoundedNumericalEntry(self.brs_options_frame,
-                                                       variable=self.state['lbfgs_max_iters'],
-                                                       min_value=1, max_value=1000, vartype=int,
-                                                       name='lbfgs_max_iters')
-        self.lbfgs_iters_entry.grid(row=1, column=2, padx=10, pady=2, sticky='w')
-        self.brs_options_frame.columnconfigure((0, 1), weight=1)
 
         self.prob_thresh_frame = FocusLabelFrame(master, text="Predictions threshold")
         self.prob_thresh_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
@@ -206,9 +140,11 @@ class InteractiveDemoApp(ttk.Frame):
 
         self.click_update_size_frame = FocusLabelFrame(master, text="Size of click update region")
         self.click_update_size_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
-        FocusHorizontalScale(self.click_update_size_frame, from_=32, to=512, resolution=1,
-                             command=self._update_click_area, variable=self.state['zoomin_params']['target_size']
-                            ).pack(padx=10)
+        self.click_update_size_slider = FocusHorizontalScale(
+            self.click_update_size_frame, from_=32, to=512, resolution=32,
+            command=self._update_click_area, variable=self.state['zoomin_params']['target_size']
+        )
+        self.click_update_size_slider.pack(padx=10)
 
         self.alpha_blend_frame = FocusLabelFrame(master, text="Alpha blending coefficient")
         self.alpha_blend_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
@@ -216,41 +152,24 @@ class InteractiveDemoApp(ttk.Frame):
                              command=self._update_blend_alpha, variable=self.state['alpha_blend']
                             ).pack(padx=10, anchor=tk.CENTER)
 
-        self.click_radius_frame = FocusLabelFrame(master, text="Visualisation click radius")
+        self.click_radius_frame = FocusLabelFrame(master, text="Click indicator size")
         self.click_radius_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
         FocusHorizontalScale(self.click_radius_frame, from_=0, to=7, resolution=1,
                              command=self._update_click_radius, variable=self.state['click_radius']
                             ).pack(padx=10, anchor=tk.CENTER)
 
         self.toggle_brush_button = FocusButton(self.clicks_options_frame, text='Toggle Brush',
-                                               bg='#ea9999', fg='black', width=10, height=2,
+                                               bg='#9497e3', fg='black', width=10, height=2,
                                                state=tk.NORMAL, command=self._toggle_brush)
         self.toggle_brush_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
 
-
-        self.brush_options_frame = FocusLabelFrame(master, text="Brush Options")
+        self.brush_options_frame = FocusLabelFrame(master, text="Brush Selection Mode")
         self.brush_options_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
         menu = tk.OptionMenu(self.brush_options_frame, self.state['brush_mode'],
                              *self.brush_modes, command=self._change_brush_mode)
-        menu.config(width=11)
+        menu.config(width=20)
         menu.grid(rowspan=2, column=0, padx=10)
-        self.net_clicks_label = tk.Label(self.brs_options_frame, text="Network clicks")
-        self.net_clicks_label.grid(row=0, column=1, pady=2, sticky='e')
-        self.net_clicks_entry = BoundedNumericalEntry(self.brs_options_frame,
-                                                      variable=self.state['net_clicks_limit'],
-                                                      min_value=0, max_value=None, vartype=int,
-                                                      allow_inf=True, name='net_clicks_limit')
-        self.net_clicks_entry.grid(row=0, column=2, padx=10, pady=2, sticky='w')
-        self.lbfgs_iters_label = tk.Label(self.brs_options_frame, text="L-BFGS\nmax iterations")
-        self.lbfgs_iters_label.grid(row=1, column=1, pady=2, sticky='e')
-        self.lbfgs_iters_entry = BoundedNumericalEntry(self.brs_options_frame,
-                                                       variable=self.state['lbfgs_max_iters'],
-                                                       min_value=1, max_value=1000, vartype=int,
-                                                       name='lbfgs_max_iters')
-
-        self.lbfgs_iters_entry.grid(row=1, column=2, padx=10, pady=2, sticky='w')
         self.brush_options_frame.columnconfigure((0, 1), weight=1)
-
 
     def _load_image_callback(self):
         self.menubar.focus_set()
@@ -266,6 +185,14 @@ class InteractiveDemoApp(ttk.Frame):
                 self.controller.set_image(image)
                 self.save_mask_btn.configure(state=tk.NORMAL)
                 self.load_mask_btn.configure(state=tk.NORMAL)
+                max_click_area = min(min(image.shape[:2]), 512)
+                self.click_update_size_slider.destroy()
+                self.click_update_size_slider = FocusHorizontalScale(
+                    self.click_update_size_frame, from_=32, to=max_click_area,
+                    resolution=32, command=self._update_click_area,
+                    variable=self.state['zoomin_params']['target_size']
+                )
+                self.click_update_size_slider.pack(padx=10)
 
     def _save_mask_callback(self):
         self.menubar.focus_set()
@@ -348,6 +275,7 @@ class InteractiveDemoApp(ttk.Frame):
 
     def _update_click_area(self, value):
         self.state['zoomin_params']['target_size'] = tk.IntVar(value=value)
+        self._update_zoom_in()
 
     def _update_click_radius(self, *args):
         if self.image_on_canvas is None:
@@ -356,62 +284,56 @@ class InteractiveDemoApp(ttk.Frame):
         self._update_image()
 
     def _change_brush_mode(self, value):
-        if value == "Tube":
+        self.state['brush_mode'] = tk.StringVar(value=value)
+        self._set_brush_value()
+
+    def _set_brush_value(self):
+        brush_mode = self.state['brush_mode'].get()
+        if brush_mode == "Foreground":
             self.brush_value = 1
-        elif value == 'Background':
+        elif brush_mode == 'Background':
             self.brush_value = 0
-        elif value == 'Erase':
+        elif brush_mode == 'Erase Brushstrokes':
             self.brush_value = 2
-        self.state['brush_mode'] = tk.IntVar(value=self.brush_value) 
 
     def _toggle_brush(self):
-        self.state['is_positive'].set(not self.state['is_positive'].get())
-
-    def _change_brs_mode(self, *args):
-        if self.state['brs_mode'].get() == 'NoBRS':
-            self.net_clicks_entry.set('INF')
-            self.net_clicks_entry.configure(state=tk.DISABLED)
-            self.net_clicks_label.configure(state=tk.DISABLED)
-            self.lbfgs_iters_entry.configure(state=tk.DISABLED)
-            self.lbfgs_iters_label.configure(state=tk.DISABLED)
+        brush_on = not self.state['brush_on'].get()
+        self.state['brush_on'].set(brush_on)
+        if not brush_on:
+            self.image_on_canvas.canvas.delete('brush-pointer')
+            self.image_on_canvas.canvas.config(cursor="tcross")
         else:
-            if self.net_clicks_entry.get() == 'INF':
-                self.net_clicks_entry.set(8)
-            self.net_clicks_entry.configure(state=tk.NORMAL)
-            self.net_clicks_label.configure(state=tk.NORMAL)
-            self.lbfgs_iters_entry.configure(state=tk.NORMAL)
-            self.lbfgs_iters_label.configure(state=tk.NORMAL)
-
-        self._reset_predictor()
+            self.image_on_canvas.canvas.config(cursor="none")
 
     def _reset_predictor(self, *args, **kwargs):
-        brs_mode = self.state['brs_mode'].get()
+        zoomin_params = {
+            'skip_clicks': self.state['zoomin_params']['skip_clicks'].get(),
+            'target_size': self.state['zoomin_params']['target_size'].get(),
+            'expansion_ratio': self.state['zoomin_params']['expansion_ratio'].get()
+        }
         prob_thresh = self.state['prob_thresh'].get()
-        net_clicks_limit = None if brs_mode == 'NoBRS' else self.state['net_clicks_limit'].get()
-
-        if self.state['zoomin_params']['use_zoom_in'].get():
-            zoomin_params = {
-                'skip_clicks': self.state['zoomin_params']['skip_clicks'].get(),
-                'target_size': self.state['zoomin_params']['target_size'].get(),
-                'expansion_ratio': self.state['zoomin_params']['expansion_ratio'].get()
-            }
-            if self.state['zoomin_params']['fixed_crop'].get():
-                zoomin_params['target_size'] = (zoomin_params['target_size'],
-                                                zoomin_params['target_size'])
-        else:
-            zoomin_params = None
-
         predictor_params = {
-            'brs_mode': brs_mode,
+            'brs_mode': 'NoBRS',
             'prob_thresh': prob_thresh,
             'zoom_in_params': zoomin_params,
-            'net_clicks_limit': net_clicks_limit,
-            'max_size': self.limit_longest_size,
-            'lbfgs_params': {'maxfun': self.state['lbfgs_max_iters'].get()}
+            'net_clicks_limit': None,
+            'lbfgs_params': {'maxfun': 20}
         }
         self.controller.reset_predictor(predictor_params)
 
+    def _update_zoom_in(self, *args, **kwargs):
+        zoom_in_params = {
+            'skip_clicks': self.state['zoomin_params']['skip_clicks'].get(),
+            'target_size': self.state['zoomin_params']['target_size'].get(),
+            'expansion_ratio': self.state['zoomin_params']['expansion_ratio'].get()
+        }
+        self.controller.update_zoom_in(zoom_in_params)
+
     def _click_callback(self, is_positive, x, y):
+        if self.state['brush_on'].get():
+            self._brush_callback(x, y)
+            return
+
         self.canvas.focus_set()
 
         if self.image_on_canvas is None:
@@ -422,6 +344,9 @@ class InteractiveDemoApp(ttk.Frame):
             self.controller.add_click(x, y, is_positive)
 
     def _brush_callback(self, x, y):
+        if not self.state['brush_on'].get():
+            return
+
         self.canvas.focus_set()
 
         if self.image_on_canvas is None:
@@ -431,6 +356,10 @@ class InteractiveDemoApp(ttk.Frame):
         if self._check_entry(self):
             self.controller.draw_brush(x, y, self.brush_value,
                                        self.state['brush_size'].get())
+
+    def _show_brush_pointer_callback(self, x, y):
+        if self.state['brush_on'].get():
+            self.image_on_canvas.show_brush_pointer(x, y, self.state['brush_size'].get())
 
     def _end_brushstroke_callback(self):
         self.controller.end_brushstroke()
@@ -459,6 +388,7 @@ class InteractiveDemoApp(ttk.Frame):
             self.image_on_canvas.register_click_callback(self._click_callback)
             self.image_on_canvas.register_brush_callback(self._brush_callback)
             self.image_on_canvas.register_end_brushstroke_callback(self._end_brushstroke_callback)
+            self.image_on_canvas.register_brush_pointer_callback(self._show_brush_pointer_callback)
 
         self._set_click_dependent_widgets_state()
 
@@ -470,21 +400,14 @@ class InteractiveDemoApp(ttk.Frame):
                 end = time.perf_counter_ns()
                 print(f"reload_image() took {(end - start) / 1e6} ms")
 
+        #cursor = "tcross" if not self.state['brush_on'].get() else "none"
+        #self.image_on_canvas.config(cursor=cursor)
+
     def _set_click_dependent_widgets_state(self):
         after_1st_click_state = tk.NORMAL if self.controller.is_incomplete_mask else tk.DISABLED
-        before_1st_click_state = tk.DISABLED if self.controller.is_incomplete_mask else tk.NORMAL
 
-        self.finish_object_button.configure(state=after_1st_click_state)
         self.undo_click_button.configure(state=after_1st_click_state)
         self.reset_clicks_button.configure(state=after_1st_click_state)
-        self.zoomin_options_frame.set_frame_state(before_1st_click_state)
-        self.brs_options_frame.set_frame_state(before_1st_click_state)
-
-        if self.state['brs_mode'].get() == 'NoBRS':
-            self.net_clicks_entry.configure(state=tk.DISABLED)
-            self.net_clicks_label.configure(state=tk.DISABLED)
-            self.lbfgs_iters_entry.configure(state=tk.DISABLED)
-            self.lbfgs_iters_label.configure(state=tk.DISABLED)
 
     def _check_entry(self, widget):
         all_checked = True

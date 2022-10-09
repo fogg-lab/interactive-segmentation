@@ -170,7 +170,6 @@ class BasePredictor(object):
         assert len(states) == len(self.transforms)
         for state, transform in zip(states, self.transforms):
             transform.set_state(state)
-        print('_set_transform_states')
 
     def apply_transforms(self, image_nd, clicks_lists):
         for t in self.transforms:

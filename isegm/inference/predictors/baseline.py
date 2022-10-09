@@ -3,9 +3,11 @@ import pickle
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
-# import pickle
 
-from isegm.inference.transforms import SigmoidForPred, LimitLongestSide
+import numpy as np
+import cv2
+
+from isegm.inference.transforms import SigmoidForPred, LimitLongestSide, ZoomIn
 from isegm.utils.crop_local import map_point_in_bbox
 
 class BaselinePredictor(object):
@@ -40,7 +42,17 @@ class BaselinePredictor(object):
         self.focus_roi = None
         self.global_roi = None
         self.with_flip = True
-        #self.transforms.append(AddHorizontalFlip())
+
+    def update_zoom_in(self, zoom_in_params):
+        # Updates target size, skip clicks, and expansion ratio of last zoom-in transform
+        if zoom_in_params is None:
+            return
+        for t in reversed(self.transforms):
+            if isinstance(t, ZoomIn):
+                t.target_size = zoom_in_params.get('target_size')
+                t.skip_clicks = zoom_in_params.get('skip_clicks')
+                t.expansion_ratio = zoom_in_params.get('expansion_ratio')
+                return
 
     def set_input_image(self, image):
         image_nd = self.to_tensor(image)
@@ -82,8 +94,6 @@ class BaselinePredictor(object):
         prediction = F.interpolate(pred_logits, mode='bilinear', align_corners=True,
                                    size=image_nd.size()[2:])
 
-        # prediction = self.get_tube_region(prediction)
-
         for t in reversed(self.transforms):
             prediction = t.inv_transform(prediction)
             if t == self.transforms[1]:
@@ -91,14 +101,8 @@ class BaselinePredictor(object):
                     pickle.dump(prediction.cpu().numpy()[0, 0], f)
 
         self.prev_prediction = prediction
-        return prediction.cpu().numpy()[0, 0]
 
-    # def get_tube_region(self, prediction):
-        # with open('prediction.pkl', 'wb') as f:
-        #     pickle.dump(prediction, f)
-        # in a jupyter notebook you can load it with:
-        # with open('prediction.pkl', 'rb') as f:
-        #     prediction = pickle.load(f)
+        return prediction.cpu().numpy()[0, 0]
 
     def _get_prediction(self, image_nd, clicks_lists):
         points_nd = self.get_points_nd(clicks_lists)
@@ -147,7 +151,6 @@ class BaselinePredictor(object):
         assert len(states) == len(self.transforms)
         for state, transform in zip(states, self.transforms):
             transform.set_state(state)
-        print('_set_transform_states')
 
     def apply_transforms(self, image_nd, clicks_lists):
         for t in self.transforms:

@@ -1,0 +1,5 @@
+checkpoint-path: ./experiments/segformerB3_tubes/000_segformerB3_tubes/last_checkpoint.pth
+cpu: True
+gpu: 0  # to use gpu, set cpu: False and gpu: <gpu_id>
+debug: False
+timing: False

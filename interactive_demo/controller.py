@@ -54,7 +54,6 @@ class InteractiveController:
             'clicker': self.clicker.get_state(),
             'predictor': self.predictor.get_states(),
         })
-
         click = clicker.Click(is_positive=is_positive, coords=(y, x))
         self.clicker.add_click(click)
         pred = self.predictor.get_prediction(self.clicker, prev_mask=self._init_mask)
@@ -135,16 +134,19 @@ class InteractiveController:
         brs_mode = self.predictor_params.get('brs_mode')
         zoom_in_params = self.predictor_params.get('zoom_in_params')
         net_clicks_limit = self.predictor_params.get('net_clicks_limit')
-        max_size = self.predictor_params.get('max_size')
+
         self.predictor = get_predictor(net=self.net, brs_mode=brs_mode,
                                        device=self.device, zoom_in_params=zoom_in_params,
-                                       net_clicks_limit=net_clicks_limit, max_size=max_size)
+                                       net_clicks_limit=net_clicks_limit)
         if self.image is not None:
             self.predictor.set_input_image(self.image)
 
     def reset_init_mask(self):
         self._init_mask = None
         self.clicker.click_indx_offset = 0
+
+    def update_zoom_in(self, zoom_in_params=None):
+        self.predictor.update_zoom_in(zoom_in_params)
 
     @property
     def current_object_prob(self):

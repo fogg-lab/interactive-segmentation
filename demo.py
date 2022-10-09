@@ -13,6 +13,10 @@ import torch
 from isegm.inference import utils
 from interactive_demo.app import InteractiveDemoApp
 
+import yaml
+
+with open('config.yml', 'r') as stream:
+    config = yaml.safe_load(stream)
 
 def main():
     args = parse_args()
@@ -30,29 +34,18 @@ def main():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('--checkpoint', type=str, required=True,
-                        help='Absolute path to the checkpoint.')
-
-    parser.add_argument('--gpu', type=int, default=0,
-                        help='Id of GPU to use.')
-
-    parser.add_argument('--cpu', action='store_true', default=False,
-                        help='Use only CPU for inference.')
-
-    parser.add_argument('--limit-longest-size', type=int, default=960,
-                        help='If the largest side of an image exceeds this value, '
-                             'it is resized so that its largest side is equal to this value.')
-
-    parser.add_argument('--debug', action='store_true', default=False, help='Debug mode.')
-
-    parser.add_argument('--timing', action='store_true', default=False, help='Performance timing.')
-
     args = parser.parse_args()
-    if args.cpu:
-        args.device = torch.device('cpu')
-    else:
+
+    args.checkpoint = config['checkpoint-path']
+    args.gpu = config.get('gpu')
+    args.cpu = config.get('cpu', "true")
+    args.debug = config['debug']
+    args.timing = config['timing']
+
+    if args.gpu is not None and not args.cpu:
         args.device = torch.device(f'cuda:{args.gpu}')
+    else:
+        args.device = torch.device('cpu')
 
     return args
 
