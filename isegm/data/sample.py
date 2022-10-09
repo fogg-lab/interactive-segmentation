@@ -1,13 +1,18 @@
 import numpy as np
 from copy import deepcopy
 from isegm.utils.misc import get_labels_with_sizes
+from isegm.data.transforms import custom_transform
+
+import cv2  # for debugging
+import os   # for debugging
 
 class DSample:
     def __init__(self, image, encoded_masks, objects=None, object_ids=None,
-                 ignore_ids=None, sample_id=None, init_mask = None):
+                 ignore_ids=None, sample_id=None, init_mask = None, custom_augmentor=None):
         self.image = image
         self.sample_id = sample_id
         self.init_mask = init_mask
+        self._custom_augmentor = custom_augmentor
 
         if len(encoded_masks.shape) == 2:
             encoded_masks = encoded_masks[:, :, np.newaxis]
@@ -41,10 +46,46 @@ class DSample:
 
     def augment(self, augmentator):
         self.reset_augmentation()
-        aug_output = augmentator(image=self.image, mask=self._encoded_masks)
+        save_before_after = np.random.randint(200) == 45
+        if save_before_after:
+            counter = 0
+            img_fname = os.path.join(os.getcwd(), f"img_before_{counter}.png")
+            mask_fname = os.path.join(os.getcwd(), f"mask_before_{counter}.png")
+            while os.path.isfile(img_fname) and os.path.isfile(mask_fname) and counter < 25:
+                counter += 1
+                img_fname = os.path.join(os.getcwd(), f"img_before_{counter}.png")
+                mask_fname = os.path.join(os.getcwd(), f"mask_before_{counter}.png")
+            if not os.path.isfile(img_fname) and not os.path.isfile(mask_fname):
+                cv2.imwrite(img_fname, self.image)
+                cv2.imwrite(mask_fname, np.max(self._encoded_masks, axis=2)*255)
+        image, mask = self._do_custom_augmentation(self.image, self._encoded_masks, "before")
+        aug_output = augmentator(image=image, mask=mask)
         image, mask = aug_output['image'],aug_output['mask']
+        if save_before_after:
+            counter = 0
+            img_fname = os.path.join(os.getcwd(), f"img_mid_{counter}.png")
+            mask_fname = os.path.join(os.getcwd(), f"mask_mid_{counter}.png")
+            while os.path.isfile(img_fname) and os.path.isfile(mask_fname) and counter < 25:
+                counter += 1
+                img_fname = os.path.join(os.getcwd(), f"img_mid_{counter}.png")
+                mask_fname = os.path.join(os.getcwd(), f"mask_mid_{counter}.png")
+            if not os.path.isfile(img_fname) and not os.path.isfile(mask_fname):
+                cv2.imwrite(img_fname, self.image)
+                cv2.imwrite(mask_fname, np.max(self._encoded_masks, axis=2)*255)
+        image, mask = self._do_custom_augmentation(image, mask, "after")
         self.image = image
         self._encoded_masks = mask
+        if save_before_after:
+            counter = 0
+            img_fname = os.path.join(os.getcwd(), f"img_after_{counter}.png")
+            mask_fname = os.path.join(os.getcwd(), f"mask_after_{counter}.png")
+            while os.path.isfile(img_fname) and os.path.isfile(mask_fname) and counter < 25:
+                counter += 1
+                img_fname = os.path.join(os.getcwd(), f"img_after_{counter}.png")
+                mask_fname = os.path.join(os.getcwd(), f"mask_after_{counter}.png")
+            if not os.path.isfile(img_fname) and not os.path.isfile(mask_fname):
+                cv2.imwrite(img_fname, self.image)
+                cv2.imwrite(mask_fname, np.max(self._encoded_masks, axis=2)*255)
         self._compute_object_areas()
         self.remove_small_objects(min_area=1)
         self._augmented = True
@@ -100,6 +141,16 @@ class DSample:
     @property
     def root_objects(self):
         return [obj_id for obj_id, obj_info in self._objects.items() if obj_info['parent'] is None]
+
+    def _do_custom_augmentation(self, image, mask, stage):
+        if self._custom_augmentor is None:
+            return image, mask
+        if stage not in self._custom_augmentor:
+            return image, mask
+        transform_list = self._custom_augmentor[stage]
+        image, mask = custom_transform(image, mask, transform_list)
+
+        return image, mask
 
     def _compute_object_areas(self):
         inverse_index = {node['mapping']: node_id for node_id, node in self._objects.items()}

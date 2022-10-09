@@ -86,7 +86,7 @@ class ISDataset(torch.utils.data.dataset.Dataset):
                     points_focus = (points - bias) * ratio
 
                     if mask.sum() > self.min_object_area and mask.sum() < mask_area * 0.85:
-                        
+
                         output = {
                             'images': self.to_tensor(image),
                             'points': points.astype(np.float32),

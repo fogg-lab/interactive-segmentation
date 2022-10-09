@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 from math import floor
 from skimage import measure, morphology
+import warnings
 
 from albumentations.core.serialization import SERIALIZABLE_REGISTRY
 from albumentations import ImageOnlyTransform, DualTransform
@@ -180,6 +181,21 @@ def remove_image_only_transforms(sdict):
 
     return sdict
 
+def custom_transform(image, mask, transform_list):
+    if transform_list is None:
+        return image, mask
+
+    for t in transform_list:
+        if t[0] in ("elastic_distortion", "elastic_distort"):
+            image, mask = elastic_distortion([image, mask], *t[1])
+        elif t[0] in ("random_square_crop", "rand_square_crop"):
+            image, mask = rand_square_crop(image, mask, *t[1])
+        elif t[0] in ("remove_small_objects", "remove_small_objects_in_mask"):
+            mask = remove_small_objects_in_mask(mask, *t[1])
+        elif t[0] in ("resize_image_mask", "resize_image_and_mask"):
+            image, mask = resize_image_mask(image, mask, *t[1])
+
+    return image, mask
 
 def elastic_distortion(images, grid_width=None, grid_height=None, magnitude=8, rs=None):
     """
@@ -322,32 +338,53 @@ def elastic_distortion(images, grid_width=None, grid_height=None, magnitude=8, r
     return augmented_images
 
 def rand_square_crop(image, mask, size_options=None, rs=None):
+
     if rs is None:
         rs = np.random.RandomState()
     if size_options is None:
         size_options = [128, 256, 512, min(image.shape[:2])]
+
     crop_size = rs.choice(size_options)
     crop_start_x_max = image.shape[1] - crop_size
     crop_start_y_max = image.shape[0] - crop_size
     crop_start_x = rs.randint(0, crop_start_x_max+1)
     crop_start_y = rs.randint(0, crop_start_y_max+1)
+
     image = image[crop_start_y:crop_start_y+crop_size, crop_start_x:crop_start_x+crop_size]
     mask = mask[crop_start_y:crop_start_y+crop_size, crop_start_x:crop_start_x+crop_size]
+
     return image, mask
 
 def remove_small_objects_in_mask(mask, min_size):
-    labeled_regions = measure.label(mask[:,:,0], connectivity=1)
-    labeled_regions = morphology.remove_small_objects(labeled_regions, min_size=min_size)
-    mask[:,:,0][labeled_regions == 0] = 0
+    _, mask[:,:,0] = cv2.threshold(mask[:,:,0], 0.5, 1, cv2.THRESH_BINARY)
+    inverse_mask = 1 - mask
+
+    labeled_regions_inverse = measure.label(inverse_mask, connectivity=1)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        labeled_inverse_regions = morphology.remove_small_objects(labeled_regions_inverse, min_size=30)
+
+    mask[labeled_inverse_regions == 0] = 1
+
+    labeled_regions = measure.label(mask[:,:,0], connectivity=2)
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        labeled_regions = morphology.remove_small_objects(labeled_regions, min_size=min_size)
+
+    mask[labeled_regions == 0] = 0
 
     return mask
 
 def resize_image_mask(image, mask, new_shape):
+
     if image.shape[:2] == new_shape:
         return image, mask
 
     img_interpolation = cv2.INTER_LINEAR if image.shape[0] < new_shape[0] else cv2.INTER_AREA
+
     image = cv2.resize(image, new_shape, interpolation=img_interpolation)
     mask = cv2.resize(mask, new_shape, interpolation=cv2.INTER_NEAREST_EXACT)
+    mask = np.expand_dims(mask, axis=2)
 
     return image, mask

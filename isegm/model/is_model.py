@@ -33,14 +33,12 @@ class ISModel(nn.Module):
                 ScaleLayer(init_value=0.05, lr_mult=1)
             ]
         self.maps_transform = nn.Sequential(*mt_layers)
-        
+
         self.dist_maps_2 = DistMaps(norm_radius=2, spatial_scale=1.0,
                                       cpu_mode=cpu_dist_maps, use_disks=use_disks)
 
         self.dist_maps_5 = DistMaps(norm_radius=5, spatial_scale=1.0,
                                       cpu_mode=cpu_dist_maps, use_disks=use_disks)
-
-
 
     def prepare_input(self, image):
         prev_mask = None

@@ -464,7 +464,7 @@ class MixVisionTransformer(nn.Module):
         outs.append(x)
         if additional_feature is not None:
             x = x + embeds[0]
-    
+
 
         # stage 2
         x, H, W = self.patch_embed2(x)
