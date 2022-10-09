@@ -9,8 +9,7 @@ import numpy as np
 
 from interactive_demo.canvas import CanvasImage
 from interactive_demo.controller import InteractiveController
-from interactive_demo.wrappers import (BoundedNumericalEntry, FocusHorizontalScale,
-                                      FocusCheckButton, FocusButton, FocusLabelFrame)
+from interactive_demo.wrappers import (FocusHorizontalScale, FocusButton, FocusLabelFrame)
 
 class InteractiveDemoApp(ttk.Frame):
     def __init__(self, master, args, model):
@@ -34,6 +33,8 @@ class InteractiveDemoApp(ttk.Frame):
                                                 predictor_params={'brs_mode': 'NoBRS'},
                                                 update_image_callback=self._update_image)
 
+        self.click_update_size_slider = None
+
         self._init_state()
         self._add_menu()
         self._add_canvas()
@@ -43,11 +44,11 @@ class InteractiveDemoApp(ttk.Frame):
         master.bind('a', lambda event: self.controller.partially_finish_object())
 
         self.state['zoomin_params']['skip_clicks'].trace(mode='w',
-                                                         callback=self._reset_predictor)
+                                                         callback=self._update_zoom_in)
         self.state['zoomin_params']['target_size'].trace(mode='w',
-                                                         callback=self._reset_predictor)
+                                                         callback=self._update_zoom_in)
         self.state['zoomin_params']['expansion_ratio'].trace(mode='w',
-                                                             callback=self._reset_predictor)
+                                                             callback=self._update_zoom_in)
 
         self.brush_value = 1
 
@@ -139,9 +140,11 @@ class InteractiveDemoApp(ttk.Frame):
 
         self.click_update_size_frame = FocusLabelFrame(master, text="Size of click update region")
         self.click_update_size_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
-        FocusHorizontalScale(self.click_update_size_frame, from_=32, to=512, resolution=1,
-                             command=self._update_click_area, variable=self.state['zoomin_params']['target_size']
-                            ).pack(padx=10)
+        self.click_update_size_slider = FocusHorizontalScale(
+            self.click_update_size_frame, from_=32, to=512, resolution=32,
+            command=self._update_click_area, variable=self.state['zoomin_params']['target_size']
+        )
+        self.click_update_size_slider.pack(padx=10)
 
         self.alpha_blend_frame = FocusLabelFrame(master, text="Alpha blending coefficient")
         self.alpha_blend_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
@@ -182,6 +185,14 @@ class InteractiveDemoApp(ttk.Frame):
                 self.controller.set_image(image)
                 self.save_mask_btn.configure(state=tk.NORMAL)
                 self.load_mask_btn.configure(state=tk.NORMAL)
+                max_click_area = min(min(image.shape[:2]), 512)
+                self.click_update_size_slider.destroy()
+                self.click_update_size_slider = FocusHorizontalScale(
+                    self.click_update_size_frame, from_=32, to=max_click_area,
+                    resolution=32, command=self._update_click_area,
+                    variable=self.state['zoomin_params']['target_size']
+                )
+                self.click_update_size_slider.pack(padx=10)
 
     def _save_mask_callback(self):
         self.menubar.focus_set()
@@ -264,6 +275,7 @@ class InteractiveDemoApp(ttk.Frame):
 
     def _update_click_area(self, value):
         self.state['zoomin_params']['target_size'] = tk.IntVar(value=value)
+        self._update_zoom_in()
 
     def _update_click_radius(self, *args):
         if self.image_on_canvas is None:
@@ -308,6 +320,14 @@ class InteractiveDemoApp(ttk.Frame):
             'lbfgs_params': {'maxfun': 20}
         }
         self.controller.reset_predictor(predictor_params)
+
+    def _update_zoom_in(self, *args, **kwargs):
+        zoom_in_params = {
+            'skip_clicks': self.state['zoomin_params']['skip_clicks'].get(),
+            'target_size': self.state['zoomin_params']['target_size'].get(),
+            'expansion_ratio': self.state['zoomin_params']['expansion_ratio'].get()
+        }
+        self.controller.update_zoom_in(zoom_in_params)
 
     def _click_callback(self, is_positive, x, y):
         if self.state['brush_on'].get():

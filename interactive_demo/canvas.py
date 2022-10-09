@@ -290,7 +290,7 @@ class CanvasImage:
         radius_y = radius * self.real_scale[1]
         x0, x1 = x - radius_x, x + radius_x
         y0, y1 = y - radius_y, y + radius_y
-        self.canvas.create_oval(x0, y0, x1, y1, tags="brush-pointer")
+        self.canvas.create_oval(x0, y0, x1, y1, outline='#9497e3', tags="brush-pointer")
 
     def __left_mouse_button_pressed(self, event):
         """ Remember previous coordinates for scrolling with the mouse """

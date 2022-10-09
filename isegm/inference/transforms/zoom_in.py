@@ -2,9 +2,8 @@ import torch
 
 from typing import List
 from isegm.inference.clicker import Click
-from isegm.utils.misc import get_bbox_iou, get_bbox_from_mask, expand_bbox, clamp_bbox
+from isegm.utils.misc import get_bbox_iou
 from .base import BaseTransform
-
 
 
 class ZoomIn(BaseTransform):
@@ -12,7 +11,7 @@ class ZoomIn(BaseTransform):
                  target_size=480,
                  skip_clicks=1,
                  expansion_ratio=1.4,
-                 min_crop_size=10,#200
+                 min_crop_size=10,
                  recompute_thresh_iou=0.5,
                  prob_thresh=0.49):
         super().__init__()

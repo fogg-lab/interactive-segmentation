@@ -23,5 +23,6 @@ dependencies:
   - pyyaml
   - pip:
     - thop
+    - yapf
 
 prefix: /home/bean/miniconda3/envs/interactive-segmentation

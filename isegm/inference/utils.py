@@ -26,6 +26,7 @@ def load_is_model(checkpoint, device, **kwargs):
         state_dict = checkpoint
 
     if isinstance(state_dict, list):
+        print("here1")
         model = load_single_is_model(state_dict[0], device, **kwargs)
         models = [load_single_is_model(x, device, **kwargs) for x in state_dict]
 
@@ -35,7 +36,6 @@ def load_is_model(checkpoint, device, **kwargs):
 
 
 def load_single_is_model(state_dict, device, **kwargs):
-    #print(state_dict['config'], **kwargs )
     model = load_model(state_dict['config'], **kwargs)
     model.load_state_dict(state_dict['state_dict'], strict=False)
 

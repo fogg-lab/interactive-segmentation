@@ -145,6 +145,9 @@ class InteractiveController:
         self._init_mask = None
         self.clicker.click_indx_offset = 0
 
+    def update_zoom_in(self, zoom_in_params=None):
+        self.predictor.update_zoom_in(zoom_in_params)
+
     @property
     def current_object_prob(self):
         if self.probs_history:
