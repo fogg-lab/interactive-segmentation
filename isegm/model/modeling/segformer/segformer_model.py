@@ -1,8 +1,7 @@
-from isegm.model.modeling.segformer.mix_transformer import mit_b0, mit_b1, mit_b2, mit_b3, mit_b4, mit_b5
+from isegm.model.modeling.segformer.mix_transformer import mit_b0, mit_b3, mit_b5
 from isegm.model.modeling.segformer.segformer_head import SegFormerHead
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from contextlib import ExitStack
 
 

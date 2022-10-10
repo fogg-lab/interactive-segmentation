@@ -1,15 +1,12 @@
 import torch.nn as nn
 import torch
-import torch.nn.functional as F
 from isegm.utils.serialization import serialize
 from .is_model import ISModel
-from isegm.model.ops import DistMaps, ScaleLayer, BatchImageNormalize
+from isegm.model.ops import DistMaps, ScaleLayer
 from isegm.model.modeling.ppclnet.segmentator import PPLCSeg
 from isegm.model.modeling.mobilenet.segmentator import MobileSeg
 from isegm.model.modeling.efficientnet.segmentator import EfficientSeg
 from isegm.model.modifiers import LRMult
-from mmcv.cnn import ConvModule, DepthwiseSeparableConvModule
-import torchvision.ops.roi_align as roi_align
 from isegm.model.ops import DistMaps
 
 
