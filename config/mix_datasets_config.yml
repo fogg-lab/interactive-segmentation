@@ -1,0 +1,9 @@
+# Example:
+# "path/to/dataset1": 0.5 # ~50% of training samples will be from this dataset
+# "path/to/dataset2": 0.3 # ~30% of training samples will be from this dataset
+# "path/to/dataset3": 0.2 # ~20% of training samples will be from this dataset
+
+"/nfs/hpc/share/wigginno/branching/data/branching": 0.4
+"/nfs/hpc/share/wigginno/branching/data/hrf": 0.35
+"/nfs/hpc/share/wigginno/branching/data/drive": 0.1
+"/nfs/hpc/share/wigginno/branching/data/chase_db1": 0.15

@@ -5,7 +5,6 @@ import torch
 import numpy as np
 
 from isegm.data.datasets import TubesDataset
-
 from isegm.utils.serialization import load_model
 
 
@@ -48,8 +47,7 @@ def load_single_is_model(state_dict, device, **kwargs):
 
 
 def get_dataset(dataset_name, cfg):
-    dataset = TubesDataset(cfg.dataset_path)
-    return dataset
+    return TubesDataset(cfg.dataset_path)
 
 
 def get_iou(gt_mask, pred_mask, ignore_label=-1):

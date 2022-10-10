@@ -15,9 +15,9 @@ def init_model(cfg):
     model_cfg.crop_size = (256, 256)
     model_cfg.num_max_points = 24
 
-    model = SegFormerModel( pipeline_version = 's2', model_version = 'b0',
-                       use_leaky_relu=True, use_rgb_conv=False, use_disks=True, norm_radius=5, binary_prev_mask=False,
-                       with_prev_mask=True, with_aux_output=True)
+    model = SegFormerModel(pipeline_version = 's2', model_version = 'b0',
+                           use_leaky_relu=True, use_rgb_conv=False, use_disks=True, norm_radius=5,
+                           binary_prev_mask=False, with_prev_mask=True, with_aux_output=True)
     model.to(cfg.device)
     model.feature_extractor.load_pretrained_weights(cfg.pretrained_weights)
     return model, model_cfg
@@ -38,15 +38,15 @@ def train(model, cfg, model_cfg):
     loss_cfg.trimap_loss = nn.BCEWithLogitsLoss()
     loss_cfg.trimap_loss_weight = 1.0
 
+    # add custom transform to the callable
     train_augmentator = Compose([
-        PadIfNeeded(min_height=crop_size[0], min_width=crop_size[1], border_mode=0),
         RandomCrop(*crop_size),
         Flip(),
         RandomRotate90()
+        #ADD RANDOM TONE CURVE, MULTIPLICATIVE NOISE, 
     ])
 
     val_augmentator = Compose([
-        PadIfNeeded(min_height=crop_size[0], min_width=crop_size[1], border_mode=0),
         RandomCrop(*crop_size),
         Flip(),
         RandomRotate90()

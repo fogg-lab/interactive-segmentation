@@ -9,6 +9,7 @@ import cv2
 from isegm.utils.crop_local import random_choose_target,get_bbox_from_mask,getLargestCC,expand_bbox, expand_bbox_with_bias
 import skimage
 
+
 class ISDataset(torch.utils.data.dataset.Dataset):
     def __init__(self,
                  augmentator=None,
@@ -85,7 +86,7 @@ class ISDataset(torch.utils.data.dataset.Dataset):
                     points_focus = (points - bias) * ratio
 
                     if mask.sum() > self.min_object_area and mask.sum() < mask_area * 0.85:
-                        
+
                         output = {
                             'images': self.to_tensor(image),
                             'points': points.astype(np.float32),
@@ -120,13 +121,11 @@ class ISDataset(torch.utils.data.dataset.Dataset):
                 print(e)
                 index = np.random.randint(len(self.dataset_samples)-1)
 
-
     def remove_small_regions(self,mask):
         mask = mask[0] > 0.5
         mask = skimage.morphology.remove_small_objects(mask,min_size=150)
         mask = np.expand_dims(mask,0).astype(np.float32)
         return mask
-
 
     def sampling_roi_full_object(self, gt_mask, min_size=32):
         max_mask = getLargestCC(gt_mask)
@@ -150,7 +149,6 @@ class ISDataset(torch.utils.data.dataset.Dataset):
         y1,x1,y2,x2 = random_choose_target(boundary,crop_size)
         return y1,x1,y2,x2
 
-
     def get_trimap(self, mask):
         h,w = mask.shape[0],mask.shape[1]
         hs,ws = h//8,w//8
@@ -160,12 +158,11 @@ class ISDataset(torch.utils.data.dataset.Dataset):
         diff_mask = np.logical_xor(mask, mask_resized).astype(np.uint8)
 
         kernel = np.ones((3, 3), dtype=np.uint8)
-        diff_mask = cv2.dilate(diff_mask, kernel, iterations=2) # 1:迭代次数，也就是执行几次膨胀操作
+        diff_mask = cv2.dilate(diff_mask, kernel, iterations=2)
 
         diff_mask = diff_mask.astype(np.float32)
         diff_mask = np.expand_dims(diff_mask,0)
         return diff_mask
-        
 
     def augment_sample(self, sample) -> DSample:
         valid_augmentation = False

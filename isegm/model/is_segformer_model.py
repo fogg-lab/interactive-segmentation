@@ -27,7 +27,7 @@ class SegFormerModel(ISModel):
             base_radius = 3
         else:
             base_radius = 5
-        
+
         self.dist_maps_base = DistMaps(norm_radius=base_radius, spatial_scale=1.0,
                                       cpu_mode=False, use_disks=True)
 

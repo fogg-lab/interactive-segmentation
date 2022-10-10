@@ -31,7 +31,11 @@ def parse_args():
                         help='Path to the model script.')
 
     parser.add_argument('--dataset_path', type=str, default='',
-                        help='Path to the dataset.')
+                        help='Path to dataset or config file (.yml) for mixing datasets. '
+                             'If you use a config file, each key should be a path to a dataset, '
+                             'and each value should be the proportion of training samples that '
+                             'come from that dataset, relative to the other datasets. '
+                             'See config/mix_datasets_config.yml for an example.')
 
     parser.add_argument('--pretrained_weights', type=str, default='',
                         help='Path to the pretrained weights checkpoint (.pth file).')

@@ -19,23 +19,14 @@ from .optimizer import get_optimizer
 from torch.cuda.amp import autocast as autocast, GradScaler
 scaler = GradScaler()
 
+
 class ISTrainer(object):
-    def __init__(self, model, cfg, model_cfg, loss_cfg,
-                 trainset, valset,
-                 optimizer='adam',
-                 optimizer_params=None,
-                 image_dump_interval=200,
-                 checkpoint_interval=10,
-                 tb_dump_period=25,
-                 max_interactive_points=0,
-                 lr_scheduler=None,
-                 metrics=None,
-                 additional_val_metrics=None,
-                 net_inputs=('images', 'points'),
-                 max_num_next_clicks=0,
-                 click_models=None,
-                 prev_mask_drop_prob=0.0,
-                 ):
+    def __init__(self, model, cfg, model_cfg, loss_cfg, trainset, valset,
+                 optimizer='adam', optimizer_params=None, image_dump_interval=200,
+                 checkpoint_interval=10, tb_dump_period=25, max_interactive_points=0,
+                 lr_scheduler=None, metrics=None, additional_val_metrics=None,
+                 net_inputs=('images', 'points'), max_num_next_clicks=0, click_models=None,
+                 prev_mask_drop_prob=0.0):
         self.cfg = cfg
         self.model_cfg = model_cfg
         self.max_interactive_points = max_interactive_points
@@ -95,8 +86,12 @@ class ISTrainer(object):
             logger.info(model)
             logger.info(get_config_repr(model._config))
 
-        self.device = cfg.device
-        self.net = model.to(self.device)
+        if not cfg.multi_gpu:
+            self.device = cfg.device
+            self.net = model.to(self.device)
+        else:
+            self.net = model
+
         self.lr = optimizer_params['lr']
 
         if lr_scheduler is not None:
@@ -111,7 +106,7 @@ class ISTrainer(object):
             for click_model in self.click_models:
                 for param in click_model.parameters():
                     param.requires_grad = False
-                click_model.to(self.device)
+                click_model = click_model.to(self.device)
                 click_model.eval()
 
     def run(self, num_epochs, start_epoch=None, validation=True):
@@ -257,10 +252,10 @@ class ISTrainer(object):
 
     def batch_forward(self, batch_data, validation=False):
         metrics = self.val_metrics if validation else self.train_metrics
-        losses_logging = dict()
+        losses_logging = {}
 
         with torch.set_grad_enabled(not validation):
-            batch_data = {k: v.to(self.device) for k, v in batch_data.items()}
+            batch_data = {k: v.cuda() for k, v in batch_data.items()}
             image, gt_mask, points = batch_data['images'], batch_data['instances'], batch_data['points']
             points_focus = batch_data['points_focus']
             rois = batch_data['rois']
@@ -284,26 +279,33 @@ class ISTrainer(object):
                     else:
                         eval_model = self.click_models[click_indx]
 
+                    if self.net.with_prev_mask:
+                        net_input = torch.cat((image, prev_output), dim=1)
+                    else:
+                        net_input = image
 
-                    net_input = torch.cat((image, prev_output), dim=1) if self.net.with_prev_mask else image
                     prev_output = torch.sigmoid(eval_model(net_input, points)['instances'])
 
                     points, points_focus = get_next_points_removeall(prev_output, orig_gt_mask, points, points_focus, rois, click_indx + 1)
 
                     if not validation:
                         self.net.train()
-                        #for m in self.net.feature_extractor.modules():
-                        #        m.eval()
 
                 if self.net.with_prev_mask and self.prev_mask_drop_prob > 0 and last_click_indx is not None:
                     zero_mask = np.random.random(size=prev_output.size(0)) < self.prev_mask_drop_prob
                     prev_output[zero_mask] = torch.zeros_like(prev_output[zero_mask])
 
+                self.net.requires_grad_(True)
+
             batch_data['points'] = points
             batch_data['prev_mask'] = prev_output
             batch_data['points_focus'] = points_focus
 
-            net_input = torch.cat((image, prev_output), dim=1) if self.net.with_prev_mask else image
+            if self.net.with_prev_mask:
+                net_input = torch.cat((image, prev_output), dim=1)
+            else:
+                net_input = image
+
             output = self.net(net_input, points)
 
             # ====== refine =====
@@ -315,16 +317,16 @@ class ISTrainer(object):
             loss = 0.0
             loss = self.add_loss('instance_loss', loss, losses_logging, validation,
                                  lambda: (output['instances'], batch_data['instances']))
-            
+
             loss = self.add_loss('instance_click_loss', loss, losses_logging, validation,
                                  lambda: (output['instances'], batch_data['instances'], output['click_map']))
-                                 
+
             loss = self.add_loss('instance_aux_loss', loss, losses_logging, validation,
                                  lambda: (output['instances_aux'], batch_data['instances']))
 
             loss = self.add_loss('trimap_loss', loss, losses_logging, validation,
                                  lambda: (refine_output['trimap'], batch_data['trimap_focus']))
-                
+
             loss = self.add_loss('instance_refine_loss', loss, losses_logging, validation,
                                  lambda: (refine_output['instances_refined'], batch_data['instances_focus'],batch_data['trimap_focus']))
 
@@ -445,9 +447,6 @@ class ISTrainer(object):
         return self.cfg.local_rank == 0
 
 
-
-
-
 def get_next_points_removeall(pred, gt, points, points_focus, rois, click_indx, pred_thresh=0.49, remove_prob = 0.0):
     assert click_indx > 0
     pred = pred.cpu().numpy()[:, 0, :, :]
@@ -486,13 +485,13 @@ def get_next_points_removeall(pred, gt, points, points_focus, rois, click_indx, 
                 points[bindx, 2 * num_points - click_indx, 0] = float(coords[0])
                 points[bindx, 2 * num_points - click_indx, 1] = float(coords[1])
                 points[bindx, 2 * num_points - click_indx, 2] = float(click_indx)
-        
+
         x1, y1, x2, y2 = rois[bindx]
         point_focus = points[bindx]
         hc,wc = y2-y1, x2-x1
         ry,rx = h/hc, w/wc
-        bias = torch.tensor([y1,x1,0]).to(points.device)
-        ratio = torch.tensor([ry,rx,1]).to(points.device)
+        bias = torch.tensor([y1,x1,0]).cuda()#to(points.device)
+        ratio = torch.tensor([ry,rx,1]).cuda()#to(points.device)
         points_focus[bindx] = (point_focus - bias) * ratio
     return points, points_focus
 
