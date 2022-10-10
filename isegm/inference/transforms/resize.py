@@ -1,9 +1,6 @@
 import math
 
-import torch
-import numpy as np
 
-from isegm.inference.clicker import Click
 from .base import BaseTransform
 import torch.nn.functional as F
 

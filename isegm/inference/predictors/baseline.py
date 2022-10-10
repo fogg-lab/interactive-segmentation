@@ -4,8 +4,6 @@ import torch
 import torch.nn.functional as F
 from torchvision import transforms
 
-import numpy as np
-import cv2
 
 from isegm.inference.transforms import SigmoidForPred, LimitLongestSide, ZoomIn
 from isegm.utils.crop_local import map_point_in_bbox

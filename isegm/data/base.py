@@ -6,7 +6,7 @@ from torchvision import transforms
 from .points_sampler import MultiPointSampler
 from .sample import DSample
 import cv2
-from isegm.utils.crop_local import random_choose_target,get_bbox_from_mask,getLargestCC,expand_bbox, expand_bbox_with_bias
+from isegm.utils.crop_local import expand_bbox_with_bias, getLargestCC, get_bbox_from_mask, random_choose_target
 import skimage
 
 

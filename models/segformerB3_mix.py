@@ -11,7 +11,6 @@ from isegm.data.points_sampler import MultiPointSampler
 from isegm.model.is_segformer_model import SegFormerModel
 from isegm.data.datasets.tubes import TubesDataset
 from isegm.data.compose import ProportionalComposeDataset
-from isegm.utils.serialization import serialize
 from isegm.engine.focalclick_trainer import ISTrainer
 
 MODEL_NAME = 'segformerB3_tubes'

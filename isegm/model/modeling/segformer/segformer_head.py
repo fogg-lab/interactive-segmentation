@@ -3,20 +3,16 @@
 #
 # This work is licensed under the NVIDIA Source Code License
 # ---------------------------------------------------------------
-import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
-from mmcv.cnn import ConvModule, DepthwiseSeparableConvModule
-from collections import OrderedDict
+from mmcv.cnn import ConvModule
 
 #from mmseg.ops import resize
 #from ..builder import HEADS
 #from .decode_head import BaseDecodeHead
 #from mmseg.models.utils import *
-import attr
 
-from IPython import embed
 
 class MLP(nn.Module):
     """

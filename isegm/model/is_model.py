@@ -3,7 +3,6 @@ import torch.nn as nn
 import numpy as np
 
 from isegm.model.ops import DistMaps, ScaleLayer, BatchImageNormalize
-from isegm.model.modifiers import LRMult
 
 
 class ISModel(nn.Module):
