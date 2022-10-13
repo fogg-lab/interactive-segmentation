@@ -13,6 +13,7 @@ dependencies:
   - mmcv-full
   - nvidia-ml-py3
   - onnx
+  - onnxruntime
   - pillow
   - pip
   - pytorch
@@ -24,5 +25,5 @@ dependencies:
   - pyyaml
   - pip:
     - thop
-    - tvm
+    - apache-tvm
     - yapf
