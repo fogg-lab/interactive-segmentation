@@ -12,6 +12,7 @@ dependencies:
   - ipython
   - mmcv-full
   - nvidia-ml-py3
+  - onnx
   - pillow
   - pip
   - pytorch
@@ -23,6 +24,7 @@ dependencies:
   - pyyaml
   - pip:
     - thop
+    - tvm
     - yapf
 
 prefix: /home/bean/miniconda3/envs/interactive-segmentation
