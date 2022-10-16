@@ -79,9 +79,14 @@ class CanvasImage:
         self.canvas.bind('<ButtonRelease-1>', self.__left_mouse_button_released)  # 
         self.canvas.bind('<B3-Motion>', self.__right_mouse_button_motion)  # move canvas to the new position
         self.canvas.bind('<B2-Motion>', self.__right_mouse_button_motion)  # move canvas to the new position
+        self.canvas.bind('Control-MouseWheel', lambda event: self.__control_scroll) # disable wheel zoom
+        self.canvas.bind('<Control-4>', lambda event: self.__control_scroll)  # disable wheel zoom
+        self.canvas.bind('<Control-5>', lambda event: self.__control_scroll)  # disable wheel zoom
         self.canvas.bind('<MouseWheel>', self.__wheel)  # zoom for Windows and MacOS, but not Linux
         self.canvas.bind('<Button-5>', self.__wheel)  # zoom for Linux, wheel scroll down
         self.canvas.bind('<Button-4>', self.__wheel)  # zoom for Linux, wheel scroll up
+
+        self.canvas.bind('<KeyRelease>', self.__key_released)
 
         self.canvas.bind('<Key>', lambda event: self.canvas.after_idle(self.__keystroke, event))
         self.container = None
@@ -98,6 +103,8 @@ class CanvasImage:
         self.real_scale = None
         self._last_rb_click_time = None
         self._last_rb_click_event = None
+
+        self.__wheel_disabled = False
 
     def register_click_callback(self,  click_callback):
         self._click_callback = click_callback
@@ -264,6 +271,9 @@ class CanvasImage:
     # ================================================ Mouse callbacks =================================================  
     def __wheel(self, event):
         """ Zoom with mouse wheel """
+        if self.__wheel_disabled:
+            return
+
         x = self.canvas.canvasx(event.x)  # get coordinates of the event on the canvas
         y = self.canvas.canvasy(event.y)
         if self.outside(x, y): return  # zoom only inside image area
@@ -277,6 +287,13 @@ class CanvasImage:
 
         self._change_canvas_scale(scale, x, y)
         self.__show_image()
+
+    def __control_scroll(self):
+        self.__wheel_disabled = True
+
+    def __key_released(self, event):
+        if event.keysym[:7].lower() == 'control':
+            self.__wheel_disabled = False
 
     def __show_brush_pointer(self, event):
         x = self.canvas.canvasx(event.x)

@@ -41,7 +41,15 @@ class InteractiveDemoApp(ttk.Frame):
         self._add_buttons()
 
         master.bind('<space>', lambda event: self.controller.finish_object())
+        master.bind('b', lambda event: self._toggle_brush())
+        master.bind('1', lambda event: self._change_brush_mode("Foreground"))
+        master.bind('2', lambda event: self._change_brush_mode("Background"))
+        master.bind('3', lambda event: self._change_brush_mode("Erase Brushstrokes"))
         master.bind('a', lambda event: self.controller.partially_finish_object())
+
+        master.bind('Control-MouseWheel', self._size_wheel)   # Windows/Mac scroll up/down
+        master.bind('<Control-4>', self._size_wheel)  # Linux scroll up
+        master.bind('<Control-5>', self._size_wheel)  # Linux scroll down
 
         self.state['zoomin_params']['skip_clicks'].trace(mode='w',
                                                          callback=self._update_zoom_in)
@@ -73,7 +81,7 @@ class InteractiveDemoApp(ttk.Frame):
             'alpha_blend': tk.DoubleVar(value=0.5),
             'brush_on': tk.BooleanVar(value=False),
             'click_radius': tk.IntVar(value=3),
-            'brush_mode': tk.IntVar(value="Foreground"),
+            'brush_mode': tk.StringVar(value="Foreground"),
         }
 
     def _add_menu(self):
@@ -165,10 +173,10 @@ class InteractiveDemoApp(ttk.Frame):
 
         self.brush_options_frame = FocusLabelFrame(master, text="Brush Selection Mode")
         self.brush_options_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
-        menu = tk.OptionMenu(self.brush_options_frame, self.state['brush_mode'],
-                             *self.brush_modes, command=self._change_brush_mode)
-        menu.config(width=20)
-        menu.grid(rowspan=2, column=0, padx=10)
+        self.menu = tk.OptionMenu(self.brush_options_frame, self.state['brush_mode'],
+                                  *self.brush_modes, command=self._change_brush_mode)
+        self.menu.config(width=20)
+        self.menu.grid(rowspan=2, column=0, padx=10)
         self.brush_options_frame.columnconfigure((0, 1), weight=1)
 
     def _load_image_callback(self):
@@ -267,6 +275,37 @@ class InteractiveDemoApp(ttk.Frame):
             self.controller.prob_thresh = self.state['prob_thresh'].get()
             self._update_image()
 
+    def _size_wheel(self, event):
+        # Respond to Linux (event.num) or Windows (event.delta) wheel event
+        if event.num == 5 or event.delta == -120 or event.delta == 1:  # scroll down, zoom out, smaller
+            self._decrement_size()
+        if event.num == 4 or event.delta == 120 or event.delta == -1:  # scroll up, zoom in, bigger
+            self._increment_size()
+
+    def _increment_size(self):
+        if self.state['brush_on'].get():
+            # increment brush size
+            cur_size = self.state['brush_size'].get()
+            if cur_size < 20:
+                self.state['brush_size'].set(cur_size + 1)
+        else:
+            # increment click update size
+            cur_size = self.state['zoomin_params']['target_size'].get()
+            if cur_size < 512:
+                self.state['zoomin_params']['target_size'].set(cur_size + 32)
+
+    def _decrement_size(self):
+        if self.state['brush_on'].get():
+            # decrement brush size
+            cur_size = self.state['brush_size'].get()
+            if cur_size > 1:
+                self.state['brush_size'].set(cur_size - 1)
+        else:
+            # decrement click update size
+            cur_size = self.state['zoomin_params']['target_size'].get()
+            if cur_size > 32:
+                self.state['zoomin_params']['target_size'].set(cur_size - 32)
+
     def _update_brush_size(self, value):
         self.state['brush_size'] = tk.IntVar(value=value)
 
@@ -284,7 +323,7 @@ class InteractiveDemoApp(ttk.Frame):
         self._update_image()
 
     def _change_brush_mode(self, value):
-        self.state['brush_mode'] = tk.StringVar(value=value)
+        self.state['brush_mode'].set(value)
         self._set_brush_value()
 
     def _set_brush_value(self):
