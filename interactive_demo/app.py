@@ -350,7 +350,9 @@ class InteractiveDemoApp(ttk.Frame):
             mask[brush_mask<2] = brush_mask[brush_mask<2]
         if mask.max() < 256:
             mask = mask.astype(np.uint8)
-            mask *= 255 // mask.max()
+            mask_max = mask.max()
+            if mask_max > 0:
+                mask *= 255 // mask_max
 
         return mask
 
