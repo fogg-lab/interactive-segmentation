@@ -1,5 +1,6 @@
-import time
+import os
 from pathlib import Path
+import time
 
 import tkinter as tk
 from tkinter import messagebox, filedialog, ttk
@@ -18,6 +19,11 @@ class InteractiveDemoApp(ttk.Frame):
         master.title("Reviving Iterative Training with Mask Guidance for Interactive Segmentation")
         master.withdraw()
         master.update_idletasks()
+
+        self._filedialog_initialdir = os.getcwd()
+        self._load_image_initialdir = None  # falls back to _filedialog_initialdir if None
+        self._load_mask_initialdir = None    # falls back to _load_image_initialdir if None
+        self._save_mask_initialdir = None   # falls back to _save_mask_initialdir if None
 
         self._debug = args.debug
         self._timing = args.timing
@@ -179,15 +185,39 @@ class InteractiveDemoApp(ttk.Frame):
         self.menu.grid(rowspan=2, column=0, padx=10)
         self.brush_options_frame.columnconfigure((0, 1), weight=1)
 
+    def _get_filedialog_initialdir(self, stage: str):
+        initialdir = self._filedialog_initialdir
+
+        if stage == 'load_image':
+            if self._load_image_initialdir is not None:
+                initialdir = self._load_image_initialdir
+        elif stage == 'load_mask':
+            if self._load_mask_initialdir is not None:
+                initialdir = self._load_mask_initialdir
+            else:
+                initialdir = self._get_filedialog_initialdir('load_image')
+        elif stage == 'save_mask':
+            if self._save_mask_initialdir is not None:
+                initialdir = self._save_mask_initialdir
+            else:
+                initialdir = self._get_filedialog_initialdir('load_mask')
+
+        return initialdir
+
     def _load_image_callback(self):
         self.menubar.focus_set()
         if self._check_entry(self):
-            filename = filedialog.askopenfilename(parent=self.master, filetypes=[
-                ("Images", "*.jpg *.jpeg *.png *.bmp *.tif *.tiff"),
-                ("All files", "*.*"),
-            ], title="Chose an image")
+            filename = filedialog.askopenfilename(
+                parent=self.master,
+                initialdir=self._get_filedialog_initialdir('load_image'),
+                filetypes=[
+                    ("Images", "*.jpg *.jpeg *.png *.bmp *.tif *.tiff"),
+                    ("All files", "*.*"),
+                ], title="Choose an image"
+            )
 
             if len(filename) > 0:
+                self._load_image_initialdir = os.path.dirname(filename)
                 self._image_path = Path(filename)
                 image = cv2.cvtColor(cv2.imread(filename, 0), cv2.COLOR_GRAY2RGB)
                 self.controller.set_image(image)
@@ -210,7 +240,7 @@ class InteractiveDemoApp(ttk.Frame):
                 return
 
             if self._mask_path is not None:
-                initial_filename = self._mask_path.name
+                initial_filename = Path(self._mask_path).name
             elif self._image_path is not None:
                 initial_filename = f"{self._image_path.stem}_mask{self._image_path.suffix}"
             else:
@@ -218,6 +248,7 @@ class InteractiveDemoApp(ttk.Frame):
 
             filename = filedialog.asksaveasfilename(
                 parent=self.master,
+                initialdir=self._get_filedialog_initialdir('save_mask'),
                 initialfile=initial_filename,
                 filetypes=[
                     ("Images", "*.jpg *.jpeg *.png *.bmp *.tif *.tiff"),
@@ -225,6 +256,7 @@ class InteractiveDemoApp(ttk.Frame):
                 ], title="Save the current mask as...")
 
             if len(filename) > 0:
+                self._save_mask_initialdir = os.path.dirname(filename)
                 brush = self.controller.brush
                 if brush is not None:
                     brush_mask = self.controller.brush.get_brush_mask()[0]
@@ -243,13 +275,18 @@ class InteractiveDemoApp(ttk.Frame):
 
         self.menubar.focus_set()
         if self._check_entry(self):
-            filename = filedialog.askopenfilename(parent=self.master, filetypes=[
-                ("Images", "*.jpg *.jpeg *.png *.bmp *.tif *.tiff"),
-                ("All files", "*.*"),
-            ], title="Chose an image")
+            filename = filedialog.askopenfilename(
+                parent=self.master,
+                initialdir=self._get_filedialog_initialdir('load_mask'),
+                filetypes=[
+                    ("Images", "*.jpg *.jpeg *.png *.bmp *.tif *.tiff"),
+                    ("All files", "*.*"),
+                ], title="Chose an image"
+            )
 
             if len(filename) > 0:
-                self._mask_path = filename
+                self._load_mask_initialdir = os.path.dirname(filename)
+                self._mask_path = Path(filename)
                 mask = cv2.imread(filename)[:, :, 0] > 127
                 self.controller.set_mask(mask)
                 self._update_image()
