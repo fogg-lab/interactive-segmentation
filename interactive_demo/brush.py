@@ -35,7 +35,10 @@ class Brush:
             raise ValueError("Current brushstroke is None. "
                              "You must call start_brushstroke() before adding points.")
 
-        self.current_brushstroke.add_point(coords)
+        new_point_added = self.current_brushstroke.add_point(coords)
+        if not new_point_added:
+            return False    # Mask not updated (new point was same as the last one)
+
         new_points = self.current_brushstroke.estimate_new_brushstroke_points()
 
         if len(new_points > 0):
@@ -101,8 +104,11 @@ class Brushstroke:
         Args:
             coords (tuple): (x, y) coordinates of the new point.
         """
+        if coords == self._coords:
+            return False    # Point is the same as the last one
         self._prev_coords = self._coords
         self._coords = coords
+        return True
 
     def estimate_new_brushstroke_points(self):
         """

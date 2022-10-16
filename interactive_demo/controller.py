@@ -168,7 +168,8 @@ class InteractiveController:
             result_mask[self.current_object_prob > self.prob_thresh] = self.object_count + 1
         return result_mask
 
-    def get_visualization(self, alpha_blend, click_radius, canvas_img=None, brush=None):
+    def get_visualization(self, alpha_blend, click_radius, canvas_img=None,
+                          brush=None):
         if self.image is None:
             return None
 

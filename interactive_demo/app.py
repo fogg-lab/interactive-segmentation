@@ -25,6 +25,8 @@ class InteractiveDemoApp(ttk.Frame):
         self._load_mask_initialdir = None    # falls back to _load_image_initialdir if None
         self._save_mask_initialdir = None   # falls back to _save_mask_initialdir if None
 
+        self._mask_mode = False # In mask mode, only the resultant mask is displayed
+
         self._debug = args.debug
         self._timing = args.timing
 
@@ -51,7 +53,8 @@ class InteractiveDemoApp(ttk.Frame):
         master.bind('<KeyPress>', self._keypad_minus_plus)
 
         master.bind('<space>', lambda event: self.controller.finish_object())
-        master.bind('b', lambda event: self._toggle_brush())
+        master.bind('t', lambda event: self._toggle_brush())
+        master.bind('<Shift-T>', lambda event: self._show_hide_mask())
         master.bind('1', lambda event: self._change_brush_mode("Foreground"))
         master.bind('2', lambda event: self._change_brush_mode("Background"))
         master.bind('3', lambda event: self._change_brush_mode("Erase Brushstrokes"))
@@ -171,7 +174,6 @@ class InteractiveDemoApp(ttk.Frame):
         self.undo_click_button = FocusButton(self.clicks_options_frame, text='Undo click',
                                              bg='#ffe599', fg='black', width=10, height=2,
                                              state=tk.DISABLED, command=self.controller.undo_click)
-
         self.undo_click_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
         self.reset_clicks_button = FocusButton(self.clicks_options_frame, text='Reset clicks',
                                                bg='#ea9999', fg='black', width=10, height=2,
@@ -223,6 +225,13 @@ class InteractiveDemoApp(ttk.Frame):
         self.menu.grid(rowspan=2, column=0, padx=10)
         self.brush_options_frame.columnconfigure((0, 1), weight=1)
 
+        self.other_options_frame = FocusLabelFrame(master, text="Display Controls")
+        self.other_options_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
+        self.show_hide_mask_button = FocusButton(self.other_options_frame, text='Show/Hide Mask',
+                                             bg='#ffe599', fg='black', width=12, height=2,
+                                             state=tk.NORMAL, command=self._show_hide_mask)
+        self.show_hide_mask_button.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=3)
+
     def _get_filedialog_initialdir(self, stage: str):
         initialdir = self._filedialog_initialdir
 
@@ -241,6 +250,10 @@ class InteractiveDemoApp(ttk.Frame):
                 initialdir = self._get_filedialog_initialdir('load_mask')
 
         return initialdir
+
+    def _show_hide_mask(self):
+        self._mask_mode = not self._mask_mode
+        self._update_image()
 
     def _load_image_callback(self):
         self.menubar.focus_set()
@@ -297,13 +310,7 @@ class InteractiveDemoApp(ttk.Frame):
 
             if len(filename) > 0:
                 self._save_mask_initialdir = os.path.dirname(filename)
-                brush = self.controller.brush
-                if brush is not None:
-                    brush_mask = self.controller.brush.get_brush_mask()[0]
-                    mask[brush_mask<2] = brush_mask[brush_mask<2]
-                if mask.max() < 256:
-                    mask = mask.astype(np.uint8)
-                    mask *= 255 // mask.max()
+                mask = self._get_mask_vis(mask)
                 cv2.imwrite(filename, mask)
 
     def _load_mask_callback(self):
@@ -330,6 +337,22 @@ class InteractiveDemoApp(ttk.Frame):
                 mask = cv2.imread(filename)[:, :, 0] > 127
                 self.controller.set_mask(mask)
                 self._update_image()
+
+    def _get_mask_vis(self, mask=None):
+        if mask is None:
+            mask = self.controller.result_mask
+        if mask is None:
+            return
+
+        brush = self.controller.brush
+        if brush is not None:
+            brush_mask = self.controller.brush.get_brush_mask()[0]
+            mask[brush_mask<2] = brush_mask[brush_mask<2]
+        if mask.max() < 256:
+            mask = mask.astype(np.uint8)
+            mask *= 255 // mask.max()
+
+        return mask
 
     def _about_callback(self):
         self.menubar.focus_set()
@@ -511,13 +534,12 @@ class InteractiveDemoApp(ttk.Frame):
         if image is not None:
             if self._timing:
                 start = time.perf_counter_ns()
+            if self._mask_mode:
+                image = self._get_mask_vis()
             self.image_on_canvas.reload_image(image, reset_canvas)
             if self._timing:
                 end = time.perf_counter_ns()
                 print(f"reload_image() took {(end - start) / 1e6} ms")
-
-        #cursor = "tcross" if not self.state['brush_on'].get() else "none"
-        #self.image_on_canvas.config(cursor=cursor)
 
     def _set_click_dependent_widgets_state(self):
         after_1st_click_state = tk.NORMAL if self.controller.is_incomplete_mask else tk.DISABLED
