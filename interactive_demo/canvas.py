@@ -94,7 +94,7 @@ class CanvasImage:
         self._brush_callback = None
         self._end_brushstroke_callback = None
 
-        self.__original_image = None
+        self.__full_image = None
         self.__current_image = None
         self.imwidth = None
         self.imheight = None
@@ -120,12 +120,14 @@ class CanvasImage:
     def get_original_canvas_image(self):
         return self.__original_image
 
-    def reload_image(self, image, reset_canvas=True):
-        self.__original_image = image
+    def reload_image(self, image, reset_canvas=True, mask_mode=False):
+        if not mask_mode:
+            self.__original_image = image.copy()
+        self.__full_image = image
         self.__current_image = image
 
         if reset_canvas:
-            self.imheight, self.imwidth = self.__original_image.shape[:2]
+            self.imheight, self.imwidth = self.__full_image.shape[:2]
 
             scale = min(self.canvas.winfo_width() / self.imwidth,
                         self.canvas.winfo_height() / self.imheight)
@@ -209,9 +211,9 @@ class CanvasImage:
             sy1, sy2 = y1 / self.current_scale, y2 / self.current_scale
             crop_x, crop_y = max(0, math.floor(sx1 - border_width)), max(0, math.floor(sy1 - border_width))
             crop_w, crop_h = math.ceil(sx2 - sx1 + 2 * border_width), math.ceil(sy2 - sy1 + 2 * border_width)
-            crop_w = min(crop_w, self.__original_image.shape[1] - crop_x)
-            crop_h = min(crop_h, self.__original_image.shape[0] - crop_y)
-            __current_image = self.__original_image[crop_y:crop_y + crop_h, crop_x:crop_x + crop_w]
+            crop_w = min(crop_w, self.__full_image.shape[1] - crop_x)
+            crop_h = min(crop_h, self.__full_image.shape[0] - crop_y)
+            __current_image = self.__full_image[crop_y:crop_y + crop_h, crop_x:crop_x + crop_w]
             crop_zw = int(round(crop_w * self.current_scale))
             crop_zh = int(round(crop_h * self.current_scale))
             zoom_sx, zoom_sy = crop_zw / crop_w, crop_zh / crop_h
@@ -261,8 +263,8 @@ class CanvasImage:
         if new_scale > 20:
             return
 
-        if (new_scale * self.__original_image.shape[1] < self.canvas.winfo_width() and
-            new_scale * self.__original_image.shape[0] < self.canvas.winfo_height()):
+        if (new_scale * self.__full_image.shape[1] < self.canvas.winfo_width() and
+            new_scale * self.__full_image.shape[0] < self.canvas.winfo_height()):
             return
 
         self.current_scale = new_scale
@@ -282,9 +284,9 @@ class CanvasImage:
 
     def __size_changed(self):
         new_scale_w = self.canvas.winfo_width() / (self.current_scale * 
-                                                   self.__original_image.shape[1])
+                                                   self.__full_image.shape[1])
         new_scale_h = self.canvas.winfo_height() / (self.current_scale *
-                                                    self.__original_image.shape[0])
+                                                    self.__full_image.shape[0])
         new_scale = min(new_scale_w, new_scale_h)
         if new_scale > 1.0:
             self._change_canvas_scale(new_scale)

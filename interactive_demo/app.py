@@ -536,7 +536,7 @@ class InteractiveDemoApp(ttk.Frame):
                 start = time.perf_counter_ns()
             if self._mask_mode:
                 image = cv2.cvtColor(self._get_mask_vis(), cv2.COLOR_GRAY2RGB)
-            self.image_on_canvas.reload_image(image, reset_canvas)
+            self.image_on_canvas.reload_image(image, reset_canvas, self._mask_mode)
             if self._timing:
                 end = time.perf_counter_ns()
                 print(f"reload_image() took {(end - start) / 1e6} ms")
