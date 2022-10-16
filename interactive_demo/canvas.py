@@ -79,13 +79,12 @@ class CanvasImage:
         self.canvas.bind('<ButtonRelease-1>', self.__left_mouse_button_released)  # 
         self.canvas.bind('<B3-Motion>', self.__right_mouse_button_motion)  # move canvas to the new position
         self.canvas.bind('<B2-Motion>', self.__right_mouse_button_motion)  # move canvas to the new position
-        self.canvas.bind('Control-MouseWheel', lambda event: self.__control_scroll) # disable wheel zoom
+        self.canvas.bind('<Control-MouseWheel>', lambda event: self.__control_scroll) # disable wheel zoom
         self.canvas.bind('<Control-4>', lambda event: self.__control_scroll)  # disable wheel zoom
         self.canvas.bind('<Control-5>', lambda event: self.__control_scroll)  # disable wheel zoom
         self.canvas.bind('<MouseWheel>', self.__wheel)  # zoom for Windows and MacOS, but not Linux
         self.canvas.bind('<Button-5>', self.__wheel)  # zoom for Linux, wheel scroll down
         self.canvas.bind('<Button-4>', self.__wheel)  # zoom for Linux, wheel scroll up
-
         self.canvas.bind('<KeyRelease>', self.__key_released)
 
         self.canvas.bind('<Key>', lambda event: self.canvas.after_idle(self.__keystroke, event))
@@ -148,6 +147,29 @@ class CanvasImage:
         self.__imframe.grid(sticky='nswe')  # make frame container sticky
         self.__imframe.rowconfigure(0, weight=1)  # make canvas expandable
         self.__imframe.columnconfigure(0, weight=1)
+
+    def keypad_minus_plus(self, event):
+        # Event passed from InteractiveDemoApp
+        if event.keysym=="KP_Add" and event.state==4:
+            # control-plus
+            zoom_type = "in"
+        elif event.keysym=="KP_Subtract" and event.state==4:
+            # control-minus
+            zoom_type = "out"
+        else:
+            zoom_type = None
+
+        if zoom_type is not None:
+            x = self.canvas.canvasx(event.x)
+            y = self.canvas.canvasy(event.y)
+            if self.outside(x, y): return  # zoom only inside image area
+            scale = 1.0
+            if zoom_type == "in":
+                scale *= self.__delta
+            else:
+                scale /= self.__delta
+            self._change_canvas_scale(scale, x, y)
+            self.__show_image()
 
     def _photo_image(self, image: np.ndarray):
         height, width = image.shape[:2]
@@ -292,7 +314,7 @@ class CanvasImage:
         self.__wheel_disabled = True
 
     def __key_released(self, event):
-        if event.keysym[:7].lower() == 'control':
+        if event.keysym[:5].lower() == 'shift':
             self.__wheel_disabled = False
 
     def __show_brush_pointer(self, event):

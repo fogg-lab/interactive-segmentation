@@ -46,6 +46,12 @@ class InteractiveDemoApp(ttk.Frame):
         self._add_canvas()
         self._add_buttons()
 
+        # Bind events: 'Shift', 'Lock', 'Control','Mod1', 'Mod2', 'Mod3', 'Mod4', 'Mod5','Button1', 'Button2', 'Button3', 'Button4', 'Button5'
+        master.bind('<KeyPress>', self._keypad_minus_plus)
+
+        # Bind events: 
+
+        # Bind other events
         master.bind('<space>', lambda event: self.controller.finish_object())
         master.bind('b', lambda event: self._toggle_brush())
         master.bind('1', lambda event: self._change_brush_mode("Foreground"))
@@ -53,9 +59,9 @@ class InteractiveDemoApp(ttk.Frame):
         master.bind('3', lambda event: self._change_brush_mode("Erase Brushstrokes"))
         master.bind('a', lambda event: self.controller.partially_finish_object())
 
-        master.bind('Control-MouseWheel', self._size_wheel)   # Windows/Mac scroll up/down
-        master.bind('<Control-4>', self._size_wheel)  # Linux scroll up
-        master.bind('<Control-5>', self._size_wheel)  # Linux scroll down
+        master.bind('<Shift-MouseWheel>', self._size_wheel)   # Windows/Mac scroll up/down
+        master.bind('<Shift-4>', self._size_wheel)  # Linux scroll up
+        master.bind('<Shift-5>', self._size_wheel)  # Linux scroll down
 
         self.state['zoomin_params']['skip_clicks'].trace(mode='w',
                                                          callback=self._update_zoom_in)
@@ -71,6 +77,16 @@ class InteractiveDemoApp(ttk.Frame):
 
         self._image_path = None
         self._mask_path = None
+
+    def _keypad_minus_plus(self, event):
+        if event.keysym=="KP_Add" and event.state==5:
+            # shift-control-plus
+            self._increment_size()
+        elif event.keysym=="KP_Subtract" and event.state==5:
+            # shift-control-minus
+            self._decrement_size()
+        elif self.image_on_canvas is not None:
+            self.image_on_canvas.keypad_minus_plus(event)
 
     def _init_state(self):
         self.state = {
