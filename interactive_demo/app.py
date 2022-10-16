@@ -46,17 +46,18 @@ class InteractiveDemoApp(ttk.Frame):
         self._add_canvas()
         self._add_buttons()
 
-        # Bind events: 'Shift', 'Lock', 'Control','Mod1', 'Mod2', 'Mod3', 'Mod4', 'Mod5','Button1', 'Button2', 'Button3', 'Button4', 'Button5'
         master.bind('<KeyPress>', self._keypad_minus_plus)
 
-        # Bind events: 
-
-        # Bind other events
         master.bind('<space>', lambda event: self.controller.finish_object())
         master.bind('b', lambda event: self._toggle_brush())
         master.bind('1', lambda event: self._change_brush_mode("Foreground"))
         master.bind('2', lambda event: self._change_brush_mode("Background"))
         master.bind('3', lambda event: self._change_brush_mode("Erase Brushstrokes"))
+        master.bind('4', lambda event: self._set_alpha(1.0))
+        master.bind('5', lambda event: self._increase_alpha())
+        master.bind('6', lambda event: self._reduce_alpha())
+        master.bind('7', lambda event: self._set_alpha(0.0))
+
         master.bind('a', lambda event: self.controller.partially_finish_object())
 
         master.bind('<Shift-MouseWheel>', self._size_wheel)   # Windows/Mac scroll up/down
@@ -87,6 +88,20 @@ class InteractiveDemoApp(ttk.Frame):
             self._decrement_size()
         elif self.image_on_canvas is not None:
             self.image_on_canvas.keypad_minus_plus(event)
+
+    def _set_alpha(self, alpha):
+        self.state['alpha_blend'].set(alpha)
+        self._update_image()
+
+    def _increase_alpha(self):
+        cur_alpha = self.state['alpha_blend'].get()
+        self.state['alpha_blend'].set(min(1.0, cur_alpha + 0.1))
+        self._update_image()
+
+    def _reduce_alpha(self):
+        cur_alpha = self.state['alpha_blend'].get()
+        self.state['alpha_blend'].set(max(0.0, cur_alpha - 0.1))
+        self._update_image()
 
     def _init_state(self):
         self.state = {
@@ -235,6 +250,7 @@ class InteractiveDemoApp(ttk.Frame):
             if len(filename) > 0:
                 self._load_image_initialdir = os.path.dirname(filename)
                 self._image_path = Path(filename)
+                self._mask_path = None
                 image = cv2.cvtColor(cv2.imread(filename, 0), cv2.COLOR_GRAY2RGB)
                 self.controller.set_image(image)
                 self.save_mask_btn.configure(state=tk.NORMAL)
