@@ -204,4 +204,3 @@ class BaselinePredictor(object):
     def set_states(self, states):
         self._set_transform_states(states['transform_states'])
         self.prev_prediction = states['prev_prediction']
-        print('set')

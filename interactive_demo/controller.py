@@ -79,9 +79,6 @@ class InteractiveController:
         if not brush_mask_updated:
             return
         self.update_image_callback()
-        #end = time.perf_counter_ns()
-        #print(f"Update time: {(end - start) / 1e6} ms")
-
 
     def end_brushstroke(self):
         if self.brush is not None:
