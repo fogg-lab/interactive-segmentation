@@ -33,6 +33,7 @@ class InteractiveController:
         self._result_mask = np.zeros(image.shape[:2], dtype=np.uint16)
         self.object_count = 0
         self.reset_last_object(update_image=False)
+        self.brush = None
         self.update_image_callback(reset_canvas=True)
 
     def set_mask(self, mask):

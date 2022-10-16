@@ -46,6 +46,8 @@ class InteractiveDemoApp(ttk.Frame):
         self._add_canvas()
         self._add_buttons()
 
+        self._prev_set_alpha = self.state['alpha_blend'].get()
+
         master.bind('<KeyPress>', self._keypad_minus_plus)
 
         master.bind('<space>', lambda event: self.controller.finish_object())
@@ -90,6 +92,11 @@ class InteractiveDemoApp(ttk.Frame):
             self.image_on_canvas.keypad_minus_plus(event)
 
     def _set_alpha(self, alpha):
+        cur_alpha = self.state['alpha_blend'].get()
+        if alpha == cur_alpha:
+            alpha = self._prev_set_alpha        # toggle back to previous value
+        else:
+            self._prev_set_alpha = cur_alpha    # set new value and save previous value
         self.state['alpha_blend'].set(alpha)
         self._update_image()
 
@@ -249,6 +256,7 @@ class InteractiveDemoApp(ttk.Frame):
 
             if len(filename) > 0:
                 self._load_image_initialdir = os.path.dirname(filename)
+                self.master.title(os.path.basename(filename))   # set window title
                 self._image_path = Path(filename)
                 self._mask_path = None
                 image = cv2.cvtColor(cv2.imread(filename, 0), cv2.COLOR_GRAY2RGB)
