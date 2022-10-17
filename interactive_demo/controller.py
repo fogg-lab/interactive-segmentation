@@ -47,6 +47,7 @@ class InteractiveController:
 
         self._init_mask = mask.astype(np.float32)
         self.probs_history.append((np.zeros_like(self._init_mask), self._init_mask))
+        self.predictor.set_prev_mask(self._init_mask)
         self._init_mask = torch.tensor(self._init_mask, device=self.device).unsqueeze(0).unsqueeze(0)
         self.clicker.click_indx_offset = 1
 
@@ -58,8 +59,6 @@ class InteractiveController:
         click = clicker.Click(is_positive=is_positive, coords=(y, x))
         self.clicker.add_click(click)
         pred = self.predictor.get_prediction(self.clicker, prev_mask=self._init_mask)
-        if self._init_mask is not None and len(self.clicker) == 1:
-            pred = self.predictor.get_prediction(self.clicker, prev_mask=self._init_mask)
 
         torch.cuda.empty_cache()
 

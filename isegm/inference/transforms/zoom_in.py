@@ -13,7 +13,8 @@ class ZoomIn(BaseTransform):
                  expansion_ratio=1.4,
                  min_crop_size=10,
                  recompute_thresh_iou=0.5,
-                 prob_thresh=0.49):
+                 prob_thresh=0.49,
+                 prev_probs=None):
         super().__init__()
         self.target_size = target_size
         self.min_crop_size = min_crop_size
@@ -21,9 +22,9 @@ class ZoomIn(BaseTransform):
         self.expansion_ratio = expansion_ratio
         self.recompute_thresh_iou = recompute_thresh_iou
         self.prob_thresh = prob_thresh
+        self._prev_probs = prev_probs
 
         self._input_image_shape = None
-        self._prev_probs = None
         self._object_roi = None
         self._roi_image = None
 
@@ -96,6 +97,9 @@ class ZoomIn(BaseTransform):
 
     def set_state(self, state):
         self._input_image_shape, self._object_roi, self._prev_probs, self._roi_image, self.image_changed = state
+
+    def set_prev_mask(self, prev_mask):
+        self._prev_probs = prev_mask
 
     def reset(self):
         self._input_image_shape = None

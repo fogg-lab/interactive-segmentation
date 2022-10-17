@@ -1,9 +1,8 @@
-import pickle
+import numpy as np
 
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
-
 
 from isegm.inference.transforms import SigmoidForPred, LimitLongestSide, ZoomIn
 from isegm.utils.crop_local import map_point_in_bbox
@@ -62,7 +61,12 @@ class BaselinePredictor(object):
         self.prev_prediction = torch.zeros_like(self.original_image[:, :1, :, :])
 
     def set_prev_mask(self, mask):
-        self.prev_prediction = torch.from_numpy(mask).unsqueeze(0).unsqueeze(0).to(self.device).float()
+        if mask.shape[:2] != (1, 1):
+            mask = mask[np.newaxis, np.newaxis, :, :]
+        self.prev_prediction = torch.from_numpy(mask).to(self.device).float()
+        for t in self.transforms:
+            if isinstance(t, ZoomIn):
+                t.set_prev_mask(mask)
 
     def get_prediction(self, clicker, prev_mask=None):
         clicks_list = clicker.get_clicks()
@@ -94,10 +98,6 @@ class BaselinePredictor(object):
 
         for t in reversed(self.transforms):
             prediction = t.inv_transform(prediction)
-            if t == self.transforms[1]:
-                with open('prediction.pkl', 'wb') as f:
-                    pickle.dump(prediction.cpu().numpy()[0, 0], f)
-
         self.prev_prediction = prediction
 
         return prediction.cpu().numpy()[0, 0]
@@ -151,6 +151,7 @@ class BaselinePredictor(object):
             transform.set_state(state)
 
     def apply_transforms(self, image_nd, clicks_lists):
+        i=0
         for t in self.transforms:
             image_nd, clicks_lists = t.transform(image_nd, clicks_lists)
 
