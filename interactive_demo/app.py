@@ -269,6 +269,8 @@ class InteractiveDemoApp(ttk.Frame):
 
             if len(filename) > 0:
                 self._load_image_initialdir = os.path.dirname(filename)
+                self._load_mask_initialdir = None
+                self._save_mask_initialdir = None
                 self.master.title(os.path.basename(filename))   # set window title
                 self._image_path = Path(filename)
                 self._mask_path = None
