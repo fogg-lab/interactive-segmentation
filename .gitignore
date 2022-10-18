@@ -4,3 +4,5 @@ log.txt
 *.pkl
 *.ipynb
 .ipynb_checkpoints
+.git
+.DS_Store
