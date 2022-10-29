@@ -220,8 +220,11 @@ class CanvasImage:
             crop_zx, crop_zy = crop_x * zoom_sx, crop_y * zoom_sy
             self.real_scale = (zoom_sx, zoom_sy)
 
+            # For shrinking, use INTER_AREA interpolation. For enlarging, use INTER_LINEAR.
+            interpolation = cv2.INTER_AREA if zoom_sx < 1 else cv2.INTER_LINEAR
+
             __current_image = cv2.resize(__current_image, (crop_zw, crop_zh),
-                                         interpolation=cv2.INTER_NEAREST)
+                                         interpolation=interpolation)
 
             zx1, zy1 = int(x1 - crop_zx), int(y1 - crop_zy)
             zx2 = int(min(zx1 + self.canvas.winfo_width(), __current_image.shape[1]))
