@@ -1,0 +1,9 @@
+train_script: "../train.py"
+
+dataset_path: ""
+
+model_path: "../models/segformerB3_mix.py"
+
+pretrained_weights: "./last_checkpoint.pth"
+
+exp_name: "segformerB3_mix"
