@@ -392,11 +392,6 @@ class CanvasImage:
         if self._brush_callback is None:
             return
 
-        move_delta = math.sqrt((event.x - self._last_rb_click_event.x) ** 2 +
-                               (event.y - self._last_rb_click_event.y) ** 2)
-        if not move_delta > 3:
-            return
-
         coords = self._get_click_coordinates(event)
 
         if coords is not None:
