@@ -16,8 +16,8 @@ class Brush:
         Start a new brushstroke.
 
         Args:
-            value (int): value of the brushstroke - 0 for background, 1 for tube, or 2 for agnostic value
-            radius (int): Radius of the brushstroke
+            value (int): Value of the brushstroke - 0 = background, 1 = tube, 2 = agnostic value.
+            radius (int): The radius of the brushstroke.
         """
         self.current_brushstroke = Brushstroke(value, radius, self.img_shape)
 
@@ -106,6 +106,11 @@ class Brushstroke:
         """
         if coords == self._coords:
             return False    # Point is the same as the last one
+        elif self._coords is not None:
+            delta_x = abs(coords[0] - self._coords[0])
+            delta_y = abs(coords[1] - self._coords[1])
+            if delta_x > 50 or delta_y > 50:
+                return False    # Point is too far from the last one
         self._prev_coords = self._coords
         self._coords = coords
         return True
