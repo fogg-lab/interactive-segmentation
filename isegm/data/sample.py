@@ -46,46 +46,12 @@ class DSample:
 
     def augment(self, augmentator):
         self.reset_augmentation()
-        save_before_after = np.random.randint(200) == 45
-        if save_before_after:
-            counter = 0
-            img_fname = os.path.join(os.getcwd(), f"img_before_{counter}.png")
-            mask_fname = os.path.join(os.getcwd(), f"mask_before_{counter}.png")
-            while os.path.isfile(img_fname) and os.path.isfile(mask_fname) and counter < 25:
-                counter += 1
-                img_fname = os.path.join(os.getcwd(), f"img_before_{counter}.png")
-                mask_fname = os.path.join(os.getcwd(), f"mask_before_{counter}.png")
-            if not os.path.isfile(img_fname) and not os.path.isfile(mask_fname):
-                cv2.imwrite(img_fname, self.image)
-                cv2.imwrite(mask_fname, np.max(self._encoded_masks, axis=2)*255)
         image, mask = self._do_custom_augmentation(self.image, self._encoded_masks, "before")
         aug_output = augmentator(image=image, mask=mask)
         image, mask = aug_output['image'],aug_output['mask']
-        if save_before_after:
-            counter = 0
-            img_fname = os.path.join(os.getcwd(), f"img_mid_{counter}.png")
-            mask_fname = os.path.join(os.getcwd(), f"mask_mid_{counter}.png")
-            while os.path.isfile(img_fname) and os.path.isfile(mask_fname) and counter < 25:
-                counter += 1
-                img_fname = os.path.join(os.getcwd(), f"img_mid_{counter}.png")
-                mask_fname = os.path.join(os.getcwd(), f"mask_mid_{counter}.png")
-            if not os.path.isfile(img_fname) and not os.path.isfile(mask_fname):
-                cv2.imwrite(img_fname, self.image)
-                cv2.imwrite(mask_fname, np.max(self._encoded_masks, axis=2)*255)
         image, mask = self._do_custom_augmentation(image, mask, "after")
         self.image = image
         self._encoded_masks = mask
-        if save_before_after:
-            counter = 0
-            img_fname = os.path.join(os.getcwd(), f"img_after_{counter}.png")
-            mask_fname = os.path.join(os.getcwd(), f"mask_after_{counter}.png")
-            while os.path.isfile(img_fname) and os.path.isfile(mask_fname) and counter < 25:
-                counter += 1
-                img_fname = os.path.join(os.getcwd(), f"img_after_{counter}.png")
-                mask_fname = os.path.join(os.getcwd(), f"mask_after_{counter}.png")
-            if not os.path.isfile(img_fname) and not os.path.isfile(mask_fname):
-                cv2.imwrite(img_fname, self.image)
-                cv2.imwrite(mask_fname, np.max(self._encoded_masks, axis=2)*255)
         self._compute_object_areas()
         self.remove_small_objects(min_area=1)
         self._augmented = True

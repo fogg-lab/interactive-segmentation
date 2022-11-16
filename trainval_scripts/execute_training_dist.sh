@@ -12,7 +12,7 @@ initial_rank=$1
 if [[ ${initial_rank} != 1 ]]; then initial_rank=0; fi
 
 # Section 1. Set local and environment variables
-project_dir="/nfs/hpc/share/wigginno/branching/ClickSEG"
+project_dir="/nfs/hpc/share/wigginno/branching/interactive-segmentation"
 script_path="${project_dir}/train.py"
 model_path="${project_dir}/models/segformerB3_mix.py"
 pretrained_weights="${project_dir}/pretrained/segformer_b3/mit_b3.pth"

@@ -33,7 +33,7 @@ def init_experiment(args, model_name):
         if args.workers > 0:
             torch.multiprocessing.set_start_method('forkserver', force=True)
 
-    experiments_path = Path(os.getcwd().rsplit("ClickSEG", 1)[0]) / "ClickSEG/experiments"
+    experiments_path = Path(os.getcwd().rsplit("interactive-segmentation", 1)[0]) / "interactive-segmentation/experiments"
     exp_parent_path = experiments_path / '/'.join(ftree)
     exp_parent_path.mkdir(parents=True, exist_ok=True)
 
