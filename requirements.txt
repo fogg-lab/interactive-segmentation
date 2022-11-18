@@ -1,10 +1,7 @@
 albumentations
 attr
 attrs
-Cython
 easydict
-fast_slic
-ipython
 matplotlib
 mmcv
 numpy
@@ -19,4 +16,3 @@ timm
 torch
 torchvision
 tqdm
-tensorboard
