@@ -42,6 +42,12 @@ class DistMaps(nn.Module):
         self.cpu_mode = cpu_mode
         self.use_disks = use_disks
         if self.cpu_mode:
+            try:
+                from isegm.utils.cython import get_dist_maps
+                self._get_dist_maps = get_dist_maps
+            except ImportError:
+                print("WARNING: get_dist_maps not imported "
+                      "(Microsoft Visual C++ 14.0 or greater may be required for this).")
             from isegm.utils.cython import get_dist_maps
             self._get_dist_maps = get_dist_maps
 
