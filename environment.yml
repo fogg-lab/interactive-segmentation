@@ -2,18 +2,11 @@ name: interactive-segmentation
 channels:
   - defaults
   - conda-forge
-  - esri
-  - fastai
   - pytorch
 dependencies:
   - albumentations
   - cudatoolkit
   - easydict
-  - ipython
-  - mmcv-full
-  - nvidia-ml-py3
-  - onnx
-  - onnxruntime
   - pillow
   - pip
   - pytorch
@@ -22,9 +15,6 @@ dependencies:
   - tensorboard
   - termcolor
   - timm
-  - pyyaml
   - pip:
+    - mmcv
     - thop
-    - apache-tvm
-    - yapf
-    - tk
