@@ -23,7 +23,8 @@ Built on top of the following repositories:
 ```  
 or  
 ```
-    conda env create -f environment.yml
+    conda install -c conda-forge mamba
+    mamba env create -f environment.yml
 ```  
 3. Get a checkpoint file (.pth) for a trained interactive segmentation model, and change the value of the configuration variable "checkpoint-path" in config.yml to the filepath (i.e C:/Users/Bob/my_model_checkpoint.pth). You can download a trained model (trained for endothelial tube network segmentation) [here](https://drive.google.com/file/d/1JJZalxTMQFL9grnEBmHNQ37IezOhjDYZ/view?usp=share_link).  
 
