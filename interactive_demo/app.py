@@ -221,7 +221,7 @@ class InteractiveDemoApp(ttk.Frame):
         self.brush_options_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
         self.menu = tk.OptionMenu(self.brush_options_frame, self.state['brush_mode'],
                                   *self.brush_modes, command=self._change_brush_mode)
-        self.menu.config(width=20)
+        self.menu.config(width=20, bg='white', fg='black')
         self.menu.grid(rowspan=2, column=0, padx=10)
         self.brush_options_frame.columnconfigure((0, 1), weight=1)
 
