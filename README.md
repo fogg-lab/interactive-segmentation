@@ -6,35 +6,46 @@ Built on top of the following repositories:
 
 <br>
 
-**Note:** We are currently working on packaging the project into a standalone program that can be distributed to any platform, without the need to manually install any dependencies or launch the app from the command line.
+## Labeling application setup
+### Prerequisites
+Install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html).  
+The labeling application runs on Linux, Windows, and Mac. This program's user interface can be less responsive on Mac, so Windows or Linux is preferred.
 
-<br>
+### Installation
+1. Clone this repository or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
+Copy the full path to the install folder (e.g. `/home/username/repositories/interactive-segmentation/install`) for the next step.
 
-### Setup to run the application
-1. Open a terminal and clone the repository  
-```
-    git clone git@github.com:fogg-lab/interactive-segmentation.git
-    cd interactive-segmentation
-```
+2. In a terminal or command prompt, navigate to the `interactive-segmentation` install folder with `cd` and the path you copied in the previous step.  
+For example:  
+    > `cd C:\Users\username\Downloads\interactive-segmentation-main\install`  
 
-2. Install the requirements
-```
-    pip install -r requirements.txt
-```  
-or  
-```
-    conda install -c conda-forge mamba
-    mamba env create -f environment.yml
-```  
-3. Get a checkpoint file (.pth) for a trained interactive segmentation model, and change the value of the configuration variable "checkpoint-path" in config.yml to the filepath (i.e C:/Users/Bob/my_model_checkpoint.pth). You can download a trained model (trained for endothelial tube network segmentation) [here](https://drive.google.com/file/d/1JJZalxTMQFL9grnEBmHNQ37IezOhjDYZ/view?usp=share_link).  
+3. Pick the matching environment.yml file for your system, and use Conda to install the environment for running the labeling app.  
+**Note**: If you are running Windows or Linux and do not have NVIDIA GPU, use an environment file ending in `_cpu.yml` instead of `_gpu.yml`.
+For example:
+    > `conda env create -f environment_windows_cpu.yml`  
+Or for Mac OS:  
+    > `conda env create -f environment_mac.yml`
 
-4. Specify other configuration parameters in `config.yml` (or use the defaults)  
+4. *Important*: Download a checkpoint file (.pth) for a trained interactive segmentation model, and move it into the checkpoints folder (e.g. `/Users/username/interactive-segmentation/checkpoints/`).  
+You can download a trained model (trained for endothelial tube network segmentation) at [this link](https://drive.google.com/file/d/1JJZalxTMQFL9grnEBmHNQ37IezOhjDYZ/view?usp=share_link).  
 
-5. Launch the application  
-```
-    python demo.py
-```
+### Usage  
+1. Activate the `iseg` conda environment created in step 3 of the installation instructions.  
+From the terminal or command prompt, activate the Conda environment, navigate to the project folder, and launch the labeling app.  
+For example:  
+> `conda activate iseg`  
+> `cd /Users/username/repositories/interactive-segmentation`  
+> `python demo.py`
 
-<br>
+2. Load an image file in the labeling app, and optionally load an existing segmentation mask as well.
+   Press the `Load image` button on the top bar to load an image file from your computer.  
+   *If you have an existing mask you want to refine or continue working on, press the `Load mask` button to load it.*
 
-### Further documentation in progress...
+3. Click on an object to select it for segmentation, or right click on the background to omit it from the segmentation.  
+   Use the `Toggle brush` button to switch between brush and click modes. The brush mode lets you paint on foreground (positive) and background (negative) selections.  
+   For example:  
+   
+
+4. Save frequently to avoid losing your work. This is expressly recommended because the application is still in early development, and it could crash.  
+
+**Note**: If needed, configuration variables can be changed in the `config.yml` file.
