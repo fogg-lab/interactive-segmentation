@@ -196,4 +196,3 @@ dependencies:
     - setuptools==59.5.0
     - thop==0.1.1-2209072238
     - yapf==0.32.0
-prefix: /Users/Noah/opt/miniconda3/envs/iseg
