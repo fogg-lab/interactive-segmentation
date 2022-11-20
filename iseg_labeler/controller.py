@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from tkinter import messagebox
 
-from interactive_demo.brush import Brush
+from iseg_labeler.brush import Brush
 from isegm.inference import clicker
 from isegm.inference.predictors import get_predictor
 from isegm.utils.vis import draw_with_blend_and_clicks

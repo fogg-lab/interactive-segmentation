@@ -8,11 +8,11 @@ from tkinter import messagebox, filedialog, ttk
 import cv2
 import numpy as np
 
-from interactive_demo.canvas import CanvasImage
-from interactive_demo.controller import InteractiveController
-from interactive_demo.wrappers import (FocusHorizontalScale, FocusButton, FocusLabelFrame)
+from iseg_labeler.canvas import CanvasImage
+from iseg_labeler.controller import InteractiveController
+from iseg_labeler.wrappers import (FocusHorizontalScale, FocusButton, FocusLabelFrame)
 
-class InteractiveDemoApp(ttk.Frame):
+class ISegApp(ttk.Frame):
     def __init__(self, master, args, model):
         super().__init__(master)
         self.master = master

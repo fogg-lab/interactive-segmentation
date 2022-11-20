@@ -157,7 +157,7 @@ class CanvasImage:
         self.__imframe.columnconfigure(0, weight=1)
 
     def keypad_minus_plus(self, event):
-        # Event passed from InteractiveDemoApp
+        # Event passed from ISegApp
         if event.keysym=="KP_Add" and event.state==4:
             # control-plus
             zoom_type = "in"

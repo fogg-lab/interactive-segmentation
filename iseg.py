@@ -1,9 +1,9 @@
 """
 Usage:
     With GPU:
-        python demo.py --checkpoint=/path/to/checkpoint.pth --gpu=0
+        python iseg.py --checkpoint=/path/to/checkpoint.pth --gpu=0
     Without GPU:
-        python demo.py --checkpoint=/path/to/checkpoint.pth --cpu
+        python iseg.py --checkpoint=/path/to/checkpoint.pth --cpu
 """
 import argparse
 import tkinter as tk
@@ -11,7 +11,7 @@ import tkinter as tk
 import torch
 
 from isegm.inference import utils
-from interactive_demo.app import InteractiveDemoApp
+from iseg_labeler.app import ISegApp
 
 import yaml
 
@@ -27,7 +27,7 @@ def main():
 
     root = tk.Tk()
     root.minsize(960, 960)
-    app = InteractiveDemoApp(root, args, model)
+    app = ISegApp(root, args, model)
     root.deiconify()
     app.mainloop()
 
