@@ -109,7 +109,7 @@ class Brushstroke:
         elif self._coords is not None:
             delta_x = abs(coords[0] - self._coords[0])
             delta_y = abs(coords[1] - self._coords[1])
-            if delta_x > 50 or delta_y > 50:
+            if delta_x > 100 or delta_y > 100:
                 return False    # Point is too far from the last one
         self._prev_coords = self._coords
         self._coords = coords

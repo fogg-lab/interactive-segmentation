@@ -49,7 +49,7 @@ class AutoScrollbar(ttk.Scrollbar):
 class CanvasImage:
     """ Display and zoom image """
 
-    def __init__(self, canvas_frame, canvas):
+    def __init__(self, canvas_frame, canvas: tk.Canvas):
         """ Initialize the ImageFrame """
         self.current_scale = 1.0  # scale for the canvas image zoom, public for outer classes
         self.__delta = 1.2  # zoom magnitude
@@ -99,6 +99,8 @@ class CanvasImage:
         self.imwidth = None
         self.imheight = None
 
+        self._canvas_drawn = False
+
         self.real_scale = None
         self._last_rb_click_time = None
         self._last_rb_click_event = None
@@ -110,19 +112,17 @@ class CanvasImage:
 
     def register_brush_callback(self,  brush_callback):
         self._brush_callback = brush_callback
-    
+
     def register_end_brushstroke_callback(self,  end_brushstroke_callback):
         self._end_brushstroke_callback = end_brushstroke_callback
 
     def register_brush_pointer_callback(self, show_brush_pointer_callback):
         self._show_brush_pointer_callback = show_brush_pointer_callback
 
-    def get_original_canvas_image(self):
-        return self.__original_image
+    def get_full_canvas_image(self):
+        return self.__full_image
 
-    def reload_image(self, image, reset_canvas=True, mask_mode=False):
-        if not mask_mode:
-            self.__original_image = image.copy()
+    def reload_image(self, image, reset_canvas=True):
         self.__full_image = image
         self.__current_image = image
 
@@ -139,9 +139,15 @@ class CanvasImage:
             self.current_scale = scale
             self._reset_canvas_offset()
 
-        self.__show_image()  # show image on the canvas
+        if not self._canvas_drawn:
+            self._canvas_drawn = True
+            self._draw_canvas()
 
+    def _draw_canvas(self):
+        self.__show_image()  # show image on the canvas
         self.canvas.focus_set()  # set focus on the canvas
+        self.__show_image() # show image on the canvas
+        self.canvas.after(30, self._draw_canvas)    # update canvas image every 30 ms
 
     def grid(self, **kw):
         """ Put CanvasImage widget on the parent widget """
@@ -181,6 +187,7 @@ class CanvasImage:
         return result
 
     def __show_image(self):
+        """ Show image on the canvas """
         box_image = self.canvas.coords(self.container)  # get image area
         box_canvas = (self.canvas.canvasx(0),  # get visible area of the canvas
                       self.canvas.canvasy(0),
@@ -271,7 +278,8 @@ class CanvasImage:
             return
 
         self.current_scale = new_scale
-        self.canvas.scale('all', x, y, relative_scale, relative_scale)  # rescale all objects
+        self.canvas.scale('all', x, y, relative_scale, relative_scale)
+        self.__show_image()
 
     # noinspection PyUnusedLocal
     def __scroll_x(self, *args):

@@ -510,7 +510,7 @@ class InteractiveDemoApp(ttk.Frame):
     def _update_image(self, reset_canvas=False):
         if (self.image_on_canvas is not None and self.controller.brush is not None
             and self.controller.brush.current_brushstroke is not None):
-            canvas_img = self.image_on_canvas.get_original_canvas_image()
+            canvas_img = self.image_on_canvas.get_full_canvas_image()
         else:
             canvas_img = None
 
@@ -540,7 +540,7 @@ class InteractiveDemoApp(ttk.Frame):
                 start = time.perf_counter_ns()
             if self._mask_mode:
                 image = cv2.cvtColor(self._get_mask_vis(), cv2.COLOR_GRAY2RGB)
-            self.image_on_canvas.reload_image(image, reset_canvas, self._mask_mode)
+            self.image_on_canvas.reload_image(image, reset_canvas)
             if self._timing:
                 end = time.perf_counter_ns()
                 print(f"reload_image() took {(end - start) / 1e6} ms")
