@@ -1,6 +1,7 @@
 albumentations
 attr
 attrs
+cython
 easydict
 matplotlib
 mmcv
