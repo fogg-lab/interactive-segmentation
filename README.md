@@ -33,9 +33,9 @@ You can download a trained model (trained for endothelial tube network segmentat
 1. Launch the application from the command line after activating the `iseg` conda environment created in step 3 of the installation instructions.  
 From the terminal or command prompt, activate the Conda environment, navigate to the project folder, and launch the labeling app.  
 For example:  
-> `cd /Users/username/repositories/interactive-segmentation`  
-> `conda activate iseg`  
-> `python iseg.py`
+    > `cd /Users/username/repositories/interactive-segmentation`  
+    > `conda activate iseg`  
+    > `python iseg.py`
 
 2. Load an image file in the labeling app, and optionally load an existing segmentation mask as well.
    Press the `Load image` button on the top bar to load an image file from your computer.  
