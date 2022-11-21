@@ -15,7 +15,7 @@ dependencies:
   - termcolor
   - timm
   - torchvision
-  pip:
+  - pip:
     - mmcv
     - setuptools==59.5.0
     - thop

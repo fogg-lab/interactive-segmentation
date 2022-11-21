@@ -7,17 +7,15 @@ echo ---------------------------------------------------------------------------
 
 SET CondaDir=%cd%\conda
 
-if NOT exist conda\ (
-    echo Installing Miniconda locally in the project folder...
-    echo --------------------------------------------------------------------------------
-    SET Target=Miniconda3-latest-Windows-x86_64.exe
-    echo Downloading %Target%...
-    curl.exe --output %Target% --url https://repo.anaconda.com/miniconda/%Target%
-    mkdir %CondaDir%
-    echo Installing Miniconda into %CondaDir%\...
-    START /wait "" %Target% /S /D=%CondaDir%
-    DEL %Target%
-)
+echo Installing Miniconda locally in the project folder...
+echo --------------------------------------------------------------------------------
+SET Target=Miniconda3-latest-Windows-x86_64.exe
+echo Downloading %Target%...
+curl.exe --output %Target% https://repo.anaconda.com/miniconda/%Target%
+mkdir %CondaDir%
+echo Installing Miniconda into %CondaDir%\...
+START /wait "" %Target% /S /D=%CondaDir%
+DEL %Target%
 
 SET CondaExecPath=conda\condabin\conda.bat
 SET CondaEnvsDir=.conda
