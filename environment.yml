@@ -1,0 +1,21 @@
+name: iseg
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - albumentations
+  - cython
+  - easydict
+  - matplotlib
+  - pip
+  - scipy
+  - scikit-image
+  - tensorboard
+  - termcolor
+  - timm
+  - torchvision
+  pip:
+    - mmcv
+    - setuptools==59.5.0
+    - thop
