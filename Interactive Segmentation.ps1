@@ -5,9 +5,11 @@ echo "--------------------------------------------------------------------------
 $CondaChildItems = gci .\conda\ -erroraction 'silentlycontinue' | Out-String
 if ($CondaChildItems -eq "") {
     echo "Installing Miniconda locally in the project folder..."
+    echo "downloading Miniconda..."
     curl.exe --output Miniconda3-latest-Windows-x86_64.exe --url https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
     mkdir conda
     $CondaDir = "$($PWD.path)\conda"
+    echo "installing Miniconda..."
     Start-Process .\Miniconda3-latest-Windows-x86_64.exe -Wait -ArgumentList @("/S", "/D=$($CondaDir)")
     Remove-Item .\Miniconda3-latest-Windows-x86_64.exe
 }
