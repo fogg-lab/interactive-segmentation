@@ -1,20 +1,23 @@
-name: interactive-segmentation
+name: iseg
 channels:
-  - defaults
-  - conda-forge
+  - bioconda
   - pytorch
+  - conda-forge
+  - defaults
 dependencies:
   - albumentations
-  - cudatoolkit
+  - cython
   - easydict
-  - pillow
+  - matplotlib
   - pip
   - pytorch
-  - torchvision
-  - pyyaml
+  - scipy
+  - scikit-image
   - tensorboard
   - termcolor
   - timm
+  - torchvision
   - pip:
     - mmcv
+    - setuptools==59.5.0
     - thop

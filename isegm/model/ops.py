@@ -48,8 +48,6 @@ class DistMaps(nn.Module):
             except ImportError:
                 print("WARNING: get_dist_maps not imported "
                       "(Microsoft Visual C++ 14.0 or greater may be required for this).")
-            from isegm.utils.cython import get_dist_maps
-            self._get_dist_maps = get_dist_maps
 
     def get_coord_features(self, points, batchsize, rows, cols):
         if self.cpu_mode:
