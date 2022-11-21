@@ -4,7 +4,7 @@ Built on top of the following repositories:
 - https://github.com/XavierCHEN34/ClickSEG
 - https://github.com/saic-vul/ritm_interactive_segmentation
 
-The labeling application runs on Linux, Windows, and Mac.  
+The labeling application runs on Linux, Windows, and Mac.
 <br></br>
 ## Labeling application setup  
 ### Prerequisites
