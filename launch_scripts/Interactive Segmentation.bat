@@ -2,9 +2,9 @@
 SETLOCAL
 
 echo Activating conda environment...
-%CondaExecPath% activate %CondaEnvDir%
+..\conda\condabin\conda.bat activate ..\.conda\iseg
 
 echo Launching Interactive Segmentation App...
-python iseg.py
+..\conda\iseg\bin\python.exe ..\iseg.py
 
 PAUSE
