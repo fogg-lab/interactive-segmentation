@@ -58,7 +58,7 @@ For example:
 #
 4. Save frequently to avoid losing your work.
 <br></br>
-### Demo (features overview and how to use the labeling app)  
+## Demo (walkthrough of features and example usage)  
 ![Demo](./assets/img/demo.gif)
 
 **Note**: If needed, configuration variables can be changed in the `config.yml` file.
