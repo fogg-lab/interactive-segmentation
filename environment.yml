@@ -1,5 +1,7 @@
 name: iseg
 channels:
+  - bioconda
+  - pytorch
   - conda-forge
   - defaults
 dependencies:
