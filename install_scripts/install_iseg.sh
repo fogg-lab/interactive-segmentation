@@ -13,4 +13,8 @@ echo "Creating conda environment..."
 ../conda/condabin/mamba env create -p ../conda/iseg -f ../environment.yml python=3.10
 ../conda/condabin/conda init bash
 
-read -p "Press enter to continue"
+echo "Downloading model checkpoint file..."
+rm ../checkpoints/last_checkpoint.pth
+curl --output ../checkpoints/last_checkpoint.pth https://media.githubusercontent.com/media/fogg-lab/interactive-segmentation/distribution/checkpoints/last_checkpoint.pth
+
+read -p "Installation complete. Press enter to continue"
