@@ -24,7 +24,7 @@ For installation option 2, install a Conda distribution like [Miniconda](https:/
     - Linux: `install_scripts/iseg_linux.sh` (execute it from the command line)
 
 ### Installation Option 2 (Manual)
-1. Clone this repository or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
+1. Clone this repository, or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
 Right-click on the project folder (the folder that contains the `environment.yml` file) and copy the path for the next step.
 #
 2. In a terminal or command prompt, navigate to the `interactive-segmentation` install folder with `cd` and the path you copied in the previous step.  
