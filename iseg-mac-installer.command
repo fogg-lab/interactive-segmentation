@@ -11,5 +11,6 @@ rm miniconda.sh
 echo "Creating conda environment..."
 ./conda/condabin/conda install -y -c conda-forge mamba
 ./conda/condabin/mamba env create -p ./conda/iseg -f environment.yml python=3.10
+./conda/condabin/conda init bash
 
 read -p "Press enter to continue"
