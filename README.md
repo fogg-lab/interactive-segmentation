@@ -21,7 +21,7 @@ For installation option 2, install a Conda distribution like [Miniconda](https:/
 2. Double click on the installation script for your operating system to install the labeling application:  
     - Windows: `install_scripts/iseg-win.bat` (if you get a security warning, click `More info` and then `Run anyway`)  
     - Mac: `install_scripts/iseg-mac.command`  
-    - Linux: `install_scripts/iseg_linux.sh`
+    - Linux: `install_scripts/iseg_linux.sh` (execute it from the command line)
 
 ### Installation Option 2 (Manual)
 1. Clone this repository or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
