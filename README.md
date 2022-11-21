@@ -40,7 +40,11 @@ For example:
 You can download a trained model (trained for endothelial tube network segmentation) at [this link](https://drive.google.com/file/d/1JJZalxTMQFL9grnEBmHNQ37IezOhjDYZ/view?usp=share_link).  
 
 ### Usage  
-1. Launch the application from the command line after activating the `iseg` conda environment created in step 3 of the installation instructions.  
+1. (Launch using the launch script) Double click the appropriate launch script for your operating system, located in the `launch_scripts` directory.
+
+OR
+
+1. (Launch using the command line) Launch the application from the command line after activating the `iseg` conda environment created in step 3 of the manual installation instructions.  
 From the terminal or command prompt, activate the Conda environment, navigate to the project folder, and launch the labeling app.  
 For example:  
     > `cd /Users/username/repositories/interactive-segmentation`  
@@ -52,7 +56,7 @@ For example:
    *If you have an existing mask you want to refine or continue working on, press the `Load mask` button to load it.*
 
 3. Click on an object to select it for segmentation, or right click on the background to omit it from the segmentation.  
-   Use the `Toggle brush` button to switch between brush and click modes. The brush mode lets you paint on foreground (positive) and background (negative) selections.  
+   Use the `Toggle brush` button to switch between brush and click modes. The brush mode lets you paint on foreground (positive) and background (negative) selections. 
 
 4. Save frequently to avoid losing your work. This is expressly recommended because the application is still in early development, and it could crash.  
 
