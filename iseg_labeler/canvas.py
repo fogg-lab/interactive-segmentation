@@ -19,8 +19,8 @@ def handle_exception(exit_code=0):
             try:
                 return func(*args, **kwargs)
             except:
-                if exit_code != 0:  # if zero, don't exit from the program
-                    sys.exit(exit_code)  # exit from the program
+                if exit_code != 0:
+                    sys.exit(exit_code)
 
         return inner
 
