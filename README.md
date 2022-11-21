@@ -36,7 +36,7 @@ For example:
 #
 4. Download a checkpoint file (.pth) for a trained interactive segmentation model, and move it into the checkpoints folder (e.g. `/Users/username/interactive-segmentation/checkpoints/`).  
 You can download a trained model (trained for endothelial tube network segmentation) at [this link](https://drive.google.com/file/d/1JJZalxTMQFL9grnEBmHNQ37IezOhjDYZ/view?usp=share_link).
-
+<br></br>
 ### Usage
 1. (Launch using the launch script) Double click the appropriate launch script for your operating system, located in the `launch_scripts` directory.
 
@@ -57,9 +57,7 @@ For example:
    Use the `Toggle brush` button to switch between brush and click modes. The brush mode lets you paint on foreground (positive) and background (negative) selections. 
 #
 4. Save frequently to avoid losing your work.
-
-<br>
-
+<br></br>
 ### Demo (features overview and how to use the labeling app)  
 ![Demo](./assets/img/demo.gif)
 
