@@ -4,16 +4,13 @@ Built on top of the following repositories:
 - https://github.com/XavierCHEN34/ClickSEG
 - https://github.com/saic-vul/ritm_interactive_segmentation
 
-<br>
+The labeling application runs on Linux, Windows, and Mac.  
 
-The labeling application runs on Linux, Windows, and Mac.
-
-## Labeling application setup
+## Labeling application setup  
 ### Prerequisites
-For installation option 2, install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html).  
+For installation option 2, install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
 ### Installation Option 1 (Automatic)
-#
 1. Clone this repository, or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
 **Additional step for Mac or Linux users**: 
     - Right-click on the project folder (the folder that contains the `environment.yml` file) and select `Open in terminal`, or `New terminal at folder`. If neither of these options exist, you can do this instead:  
@@ -24,10 +21,9 @@ For installation option 2, install a Conda distribution like [Miniconda](https:/
 2. Double click on the installation script for your operating system to install the labeling application:  
     - Windows: `install_scripts/iseg-win.bat` (if you get a security warning, click `More info` and then `Run anyway`)  
     - Mac: `install_scripts/iseg-mac.command`  
-    - Linux: `install_scripts/iseg_linux.sh`  
-#
+    - Linux: `install_scripts/iseg_linux.sh`
+
 ### Installation Option 2 (Manual)
-#
 1. Clone this repository or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
 Right-click on the project folder (the folder that contains the `environment.yml` file) and copy the path for the next step.
 #
@@ -39,10 +35,9 @@ For example:
     > `conda env create -f environment.yml python=3.10`  
 #
 4. Download a checkpoint file (.pth) for a trained interactive segmentation model, and move it into the checkpoints folder (e.g. `/Users/username/interactive-segmentation/checkpoints/`).  
-You can download a trained model (trained for endothelial tube network segmentation) at [this link](https://drive.google.com/file/d/1JJZalxTMQFL9grnEBmHNQ37IezOhjDYZ/view?usp=share_link).  
-#
-### Usage  
-#
+You can download a trained model (trained for endothelial tube network segmentation) at [this link](https://drive.google.com/file/d/1JJZalxTMQFL9grnEBmHNQ37IezOhjDYZ/view?usp=share_link).
+
+### Usage
 1. (Launch using the launch script) Double click the appropriate launch script for your operating system, located in the `launch_scripts` directory.
 
 OR
@@ -61,8 +56,10 @@ For example:
 3. Click on an object to select it for segmentation, or right click on the background to omit it from the segmentation.  
    Use the `Toggle brush` button to switch between brush and click modes. The brush mode lets you paint on foreground (positive) and background (negative) selections. 
 #
-4. Save frequently to avoid losing your work. This is expressly recommended because the application is still in early development, and it could crash.  
-#
+4. Save frequently to avoid losing your work.
+
+<br>
+
 ### Demo (features overview and how to use the labeling app)  
 ![Demo](./assets/img/demo.gif)
 
