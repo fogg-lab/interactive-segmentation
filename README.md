@@ -15,7 +15,7 @@ If you pick installation option 2, first install a Conda distribution like [Mini
 **Additional step for Mac or Linux users**: 
     - Right-click on the project folder (the folder that contains `environment.yml` and this README file), and select `Open in terminal`, or `New terminal at folder`. If neither of these options exist, you can do this instead:  
       - Right-click on the project folder and copy the path
-      - Open a terminal (or command prompt) and navigate to the project folder by entering `cd <path to project folder>`, e.g. `cd /home/user/interactive-segmentation`
+      - Open a terminal and navigate to the project folder by entering `cd <path to project folder>`, e.g. `cd /home/user/interactive-segmentation`
     - In the terminal, enter a command to add the execute permission to the install and launch scripts: `chmod u+x install_scripts/iseg-mac-installer.command && chmod u+x launch_scripts/iseg-mac-launcher.command`
 #
 2. Double click on the installation script for your operating system to install the labeling application:  
