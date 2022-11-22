@@ -40,7 +40,7 @@ You can download a trained model (trained for endothelial tube network segmentat
 ### Usage
 1. (Launch using the launch script) Double click the appropriate launch script for your operating system, located in the `launch_scripts` directory.
 
-OR
+&nbsp;&nbsp;&nbsp;&nbsp;OR
 
 1. (Launch using the command line) Launch the application from the command line after activating the `iseg` conda environment created in step 3 of the manual installation instructions.  
 From the terminal or command prompt, activate the Conda environment, navigate to the project folder, and launch the labeling app.  
