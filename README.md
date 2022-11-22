@@ -57,8 +57,8 @@ For example:
    Use the `Toggle brush` button to switch between brush and click modes. The brush mode lets you paint on foreground (positive) and background (negative) selections. 
 #
 4. Save frequently to avoid losing your work.
+
+**Note**: If needed, configuration variables can be changed in the `config.yml` file.
 <br></br>
 ## Demo (walkthrough of features and example usage)  
 ![Demo](./assets/img/demo.gif)
-
-**Note**: If needed, configuration variables can be changed in the `config.yml` file.
