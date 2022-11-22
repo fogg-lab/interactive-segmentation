@@ -200,7 +200,7 @@ class ISegApp(ttk.Frame):
         )
         self.click_update_size_slider.pack(padx=10)
 
-        self.alpha_blend_frame = FocusLabelFrame(master, text="Alpha blending coefficient")
+        self.alpha_blend_frame = FocusLabelFrame(master, text="Selection Transparency")
         self.alpha_blend_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
         FocusHorizontalScale(self.alpha_blend_frame, from_=0.0, to=1.0, resolution=0.1,
                              command=self._update_blend_alpha, variable=self.state['alpha_blend']

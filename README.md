@@ -54,9 +54,11 @@ For example:
    *If you have an existing mask you want to refine or continue working on, press the `Load mask` button to load it.*
 #
 3. Use these controls to label the image:  
-    - *Scroll with your mouse to zoom in/out*, and *right click + drag to pan around in the image*.
-    - *Click on an object to select it for segmentation*, or *right click on the background to omit it from the segmentation*.  
-    - *Use the `Toggle brush` button to switch between brush and click modes*. The brush mode lets you paint on foreground (positive) and background (negative) selections. 
+    - Scroll with your mouse to zoom in/out, and right click + drag to pan around in the image.
+    - Click on an object to select it for segmentation, or right click on the background to omit it from the segmentation.  
+    - Use the `Toggle brush` button to switch between brush and click modes. The brush mode lets you paint on foreground (positive) and background (negative) selections.  
+    - Use the `Selection Transparency` slider to change the transparency of the selection layer.  
+    - Press `Show/Hide Mask` to show or hide the resulting segmentation mask.
 #
 4. Save frequently to avoid losing your work.
 
