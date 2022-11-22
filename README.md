@@ -8,7 +8,7 @@ The labeling application runs on Linux, Windows, and Mac.
 <br></br>
 ## Labeling application setup  
 ### Prerequisites
-If you pick installation option 2, install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
+If you pick installation option 2, first install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html). During the installation process for Miniconda (or Anaconda), check the box to add conda to your `path` environmental variable.
 
 ### Installation Option 1 (Automatic)
 1. Clone this repository, or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
