@@ -13,8 +13,8 @@ If you pick installation option 2, first install a Conda distribution like [Mini
 ### Installation Option 1 (Automatic)
 1. Clone this repository, or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
 **Additional step for Mac or Linux users**: 
-    - Right-click on the project folder (the folder that contains the `environment.yml` file) and select `Open in terminal`, or `New terminal at folder`. If neither of these options exist, you can do this instead:  
-      - Right-click on the project folder (the folder that contains the `environment.yml` file) and copy the path
+    - Right-click on the project folder (the folder that contains `environment.yml` and this README file), and select `Open in terminal`, or `New terminal at folder`. If neither of these options exist, you can do this instead:  
+      - Right-click on the project folder and copy the path
       - Open a terminal (or command prompt) and navigate to the project folder by entering `cd <path to project folder>`, e.g. `cd /home/user/interactive-segmentation`
     - In the terminal, enter a command to add the execute permission to the install and launch scripts: `chmod u+x install_scripts/iseg-mac-installer.command && chmod u+x launch_scripts/iseg-mac-launcher.command`
 #
@@ -25,7 +25,7 @@ If you pick installation option 2, first install a Conda distribution like [Mini
 
 ### Installation Option 2 (Manual)
 1. Clone this repository, or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
-Right-click on the project folder (the folder that contains the `environment.yml` file) and copy the path for the next step.
+Right-click on the project folder (the folder that contains `environment.yml` and this README file) and copy the path for the next step.
 #
 2. In a terminal or command prompt, navigate to the `interactive-segmentation` install folder with `cd` and the path you copied in the previous step.  
 For example:  
