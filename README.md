@@ -57,7 +57,7 @@ For example:
     - Scroll with your mouse to zoom in/out, and right click + drag to pan around in the image.
     - Click on an object to select it for segmentation, or right click on the background to omit it from the segmentation.  
     - Use the `Toggle brush` button to switch between brush and click modes. The brush mode lets you paint on foreground (positive) and background (negative) selections.  
-    - Use the `Selection Transparency` slider to change the transparency of the selection layer.  
+    - Use the `Selection Transparency` (alpha blending coefficient) slider to change the transparency of the selection layer.  
     - Press `Show/Hide Mask` to show or hide the resulting segmentation mask.
 #
 4. Save frequently to avoid losing your work.
