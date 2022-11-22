@@ -62,3 +62,9 @@ For example:
 <br></br>
 ## Demo (walkthrough of features and example usage)  
 ![Demo](./assets/img/demo.gif)
+
+
+## Training a segmentation model
+For now, please see the documentation for these other repositories for more information:
+- https://github.com/XavierCHEN34/ClickSEG
+- https://github.com/saic-vul/ritm_interactive_segmentation
