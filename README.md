@@ -53,10 +53,11 @@ For example:
    Press the `Load image` button on the top bar to load an image file from your computer.  
    *If you have an existing mask you want to refine or continue working on, press the `Load mask` button to load it.*
 #
-3. Click on an object to select it for segmentation, or right click on the background to omit it from the segmentation.  
+3. *Scroll with your mouse to zoom in/out*, and *right click + drag to pan around in the image*.
+4. *Click on an object to select it for segmentation*, or *right click on the background to omit it from the segmentation*.  
    Use the `Toggle brush` button to switch between brush and click modes. The brush mode lets you paint on foreground (positive) and background (negative) selections. 
 #
-4. Save frequently to avoid losing your work.
+5. Save frequently to avoid losing your work.
 
 **Note**: If needed, configuration variables can be changed in the `config.yml` file.
 <br></br>
