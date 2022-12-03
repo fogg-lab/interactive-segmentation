@@ -11,7 +11,7 @@ The labeling application runs on Linux, Windows, and Mac.
 If you pick installation option 2, first install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html). During the installation process for Miniconda (or Anaconda), check the box to add conda to your `path` environmental variable.
 
 ### Installation Option 1 (Automatic)
-1. Clone this repository, or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
+1. Clone this repository, or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder. Make sure the folder you extract it to contains no spaces or the install script will fail (the reason for this is that for launching the Miniconda installer from the command line, the /D option doesn't allow any spaces).  
 > 1.1 **Additional step for Mac or Linux users only**:
 >   - Right-click on the project folder (the folder that contains `environment.yml` and this README file), and select `Open in terminal`, or `New terminal at folder`. >  If neither of these options exist, you can do this instead:  
 >   - Right-click on the project folder and copy the path  
