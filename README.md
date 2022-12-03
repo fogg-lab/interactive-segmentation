@@ -13,12 +13,12 @@ If you pick installation option 2, first install a Conda distribution like [Mini
 ### Installation Option 1 (Automatic)
 1. Clone this repository, or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder. Make sure the folder you extract it to contains no spaces or the install script will fail (the reason for this is that for launching the Miniconda installer from the command line, the /D option doesn't allow any spaces).  
 > 1.1 **Additional step for Mac or Linux users only**:
->   - Right-click on the project folder (the folder that contains `environment.yml` and this README file), and select `Open in terminal`, or `New terminal at folder`. >  If neither of these options exist, you can do this instead:  
->   - Right-click on the project folder and copy the path  
->   - Open a terminal and navigate to the project folder by entering `cd <path to project folder>`, for example:  
->     `cd /home/user/interactive-segmentation`  
->   - In the terminal, enter a command to add the execute permission to the install and launch scripts, for example:  
->     `chmod u+x install_scripts/iseg-mac-installer.command && chmod u+x launch_scripts/iseg-mac-launcher.command`
+>   - Right-click on the project folder (the folder that contains `environment.yml` and this README file), and select `Open in terminal`, or `New terminal at folder`.  If neither of these options exist, you can do this instead:  
+>     - Right-click on the project folder and copy the path  
+>     - Open a terminal and navigate to the project folder by entering `cd <path to project folder>`, for example:  
+>       `cd /home/user/interactive-segmentation`  
+>     - In the terminal, enter a command to add the execute permission to the install and launch scripts, for example:  
+>       `chmod u+x install_scripts/iseg-mac-installer.command && chmod u+x launch_scripts/iseg-mac-launcher.command`
 #
 2. Double click on the installation script for your operating system to install the labeling application:  
     - Windows: `install_scripts/iseg-windows-installer.bat` (if you get a security warning, click `More info` and then `Run anyway`)  
