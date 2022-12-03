@@ -5,7 +5,7 @@ echo ---------------------------------------------------------------------------
 echo Interactive Segmentation App Launcher
 echo --------------------------------------------------------------------------------
 
-SET CondaDir=%cd%\..\conda
+SET CondaDir=..\conda
 
 echo Installing Miniconda locally in the project folder...
 echo --------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ echo ---------------------------------------------------------------------------
 mkdir %CondaEnvsDir%
 CALL %CondaExecPath% config --set remote_max_retries 3
 CALL %CondaExecPath% install -y -c conda-forge mamba
-CALL %CondaDir%\condabin\mamba.bat env create -p %CondaEnvsDir%\iseg -f ..\environment.yml python=3.10
+CALL ..\conda\condabin\mamba.bat env create -p %CondaEnvsDir%\iseg -f ..\environment.yml python=3.10
 
 echo "Downloading model checkpoint file..."
 DEL ..\checkpoints\last_checkpoint.pth
