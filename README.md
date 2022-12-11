@@ -34,7 +34,7 @@ For example:
     > `cd C:\Users\username\Downloads\interactive-segmentation`  
 #
 3. Use conda to install the environment for running the labeling app.  
-    > `conda install -n base conda-libmamba-solver`
+    > `conda install -n base conda-libmamba-solver`  
     > `conda env create -f environment.yml python=3.10 --solver=libmamba`  
 #
 4. Download a checkpoint file (.pth) for a trained interactive segmentation model, and move it into the checkpoints folder (e.g. `/Users/username/interactive-segmentation/checkpoints/`).  
