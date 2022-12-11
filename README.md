@@ -38,7 +38,7 @@ Right-click on the project folder (the folder that contains `environment.yml` an
 3. Use conda to install the environment for running the labeling app.  
     ```
     conda install -n base conda-libmamba-solver
-    conda env create -f environment.yml python=3.10 --solver=libmamba
+    conda env create -f environment.yml --solver=libmamba
     ```
 
 #

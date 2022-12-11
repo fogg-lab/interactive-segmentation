@@ -10,6 +10,7 @@ dependencies:
   - easydict
   - matplotlib
   - pip
+  - python=3.10
   - pytorch
   - scipy
   - scikit-image
