@@ -3,7 +3,56 @@ from torch import nn as nn
 import numpy as np
 import isegm.model.initializer as initializer
 
+class qnode:
+    def __init__(self):
+        self.row = None
+        self.col = None
+        self.layer = None
+        self.orig_row = None
+        self.orig_col = None
 
+def get_dist_maps(points: np.ndarray, height: int, width: int, norm_delimiter: float) -> dict:
+    dxy = [-1, 0, 0, -1, 0, 1, 1, 0]
+    q = []
+    qhead = 0
+    qtail = -1
+    dist_maps = np.full((2, height, width), 1e6, dtype=np.float32, order="C")
+
+    for i in range(points.shape[0]):
+        x, y = round(points[i, 0]), round(points[i, 1])
+        if x >= 0:
+            qtail += 1
+            q[qtail].row = x
+            q[qtail].col = y
+            q[qtail].orig_row = x
+            q[qtail].orig_col = y
+            if i >= points.shape[0] / 2:
+                q[qtail].layer = 1
+            else:
+                q[qtail].layer = 0
+            dist_maps[q[qtail].layer, x, y] = 0
+
+    while qtail - qhead + 1 > 0:
+        v = q[qhead]
+        qhead += 1
+
+        for k in range(4):
+            x = v.row + dxy[2 * k]
+            y = v.col + dxy[2 * k + 1]
+
+            ndist = ((x - v.orig_row)/norm_delimiter) ** 2 + ((y - v.orig_col)/norm_delimiter) ** 2
+            if (x >= 0 and y >= 0 and x < height and y < width and
+                dist_maps[v.layer, x, y] > ndist):
+                qtail += 1
+                q[qtail].orig_col = v.orig_col
+                q[qtail].orig_row = v.orig_row
+                q[qtail].layer = v.layer
+                q[qtail].row = x
+                q[qtail].col = y
+                dist_maps[v.layer, x, y] = ndist
+
+    return dist_maps
+    
 def select_activation_function(activation):
     if isinstance(activation, str):
         if activation.lower() == 'relu':
@@ -42,12 +91,7 @@ class DistMaps(nn.Module):
         self.cpu_mode = cpu_mode
         self.use_disks = use_disks
         if self.cpu_mode:
-            try:
-                from isegm.utils.cython import get_dist_maps
-                self._get_dist_maps = get_dist_maps
-            except ImportError:
-                print("WARNING: get_dist_maps not imported "
-                      "(Microsoft Visual C++ 14.0 or greater may be required for this).")
+            self._get_dist_maps = get_dist_maps
 
     def get_coord_features(self, points, batchsize, rows, cols):
         if self.cpu_mode:
