@@ -156,28 +156,21 @@ class CanvasImage:
         self.__imframe.rowconfigure(0, weight=1)  # make canvas expandable
         self.__imframe.columnconfigure(0, weight=1)
 
-    def keypad_minus_plus(self, event):
+    def keypad_minus_plus(self, event, zoom_type):
+        if zoom_type not in ("in", "out"):
+            raise ValueError(f"Invalid zoom_type: \"{zoom_type}\"."
+                             " zoom_type must be either \"in\" or \"out\"")
         # Event passed from ISegApp
-        if event.keysym=="KP_Add" and event.state==4:
-            # control-plus
-            zoom_type = "in"
-        elif event.keysym=="KP_Subtract" and event.state==4:
-            # control-minus
-            zoom_type = "out"
+        x = self.canvas.canvasx(event.x)
+        y = self.canvas.canvasy(event.y)
+        if self.outside(x, y): return  # zoom only inside image area
+        scale = 1.0
+        if zoom_type == "in":
+            scale *= self.__delta
         else:
-            zoom_type = None
-
-        if zoom_type is not None:
-            x = self.canvas.canvasx(event.x)
-            y = self.canvas.canvasy(event.y)
-            if self.outside(x, y): return  # zoom only inside image area
-            scale = 1.0
-            if zoom_type == "in":
-                scale *= self.__delta
-            else:
-                scale /= self.__delta
-            self._change_canvas_scale(scale, x, y)
-            self.__show_image()
+            scale /= self.__delta
+        self._change_canvas_scale(scale, x, y)
+        self.__show_image()
 
     def _photo_image(self, image: np.ndarray):
         height, width = image.shape[:2]

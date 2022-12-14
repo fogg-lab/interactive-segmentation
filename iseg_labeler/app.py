@@ -85,14 +85,14 @@ class ISegApp(ttk.Frame):
         self._mask_path = None
 
     def _keypad_minus_plus(self, event):
-        if event.keysym=="KP_Add" and event.state==5:
-            # shift-control-plus
-            self._increment_size()
-        elif event.keysym=="KP_Subtract" and event.state==5:
-            # shift-control-minus
-            self._decrement_size()
-        elif self.image_on_canvas is not None:
-            self.image_on_canvas.keypad_minus_plus(event)
+        if self.image_on_canvas is None or event.state not in (4, 5):
+            return
+        if event.keysym in ("KP_Add", "plus", "equal"):
+            # control-plus or shift-control-plus
+            self.image_on_canvas.keypad_minus_plus(event, "in")
+        elif event.keysym in ("KP_Subtract", "minus", "underscore"):
+            # control-minus or shift-control-minus
+            self.image_on_canvas.keypad_minus_plus(event, "out")
 
     def _set_alpha(self, alpha):
         cur_alpha = self.state['alpha_blend'].get()
@@ -195,7 +195,7 @@ class ISegApp(ttk.Frame):
         self.click_update_size_frame = FocusLabelFrame(master, text="Size of click update region")
         self.click_update_size_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=3)
         self.click_update_size_slider = FocusHorizontalScale(
-            self.click_update_size_frame, from_=32, to=512, resolution=32,
+            self.click_update_size_frame, from_=32, to=1992, resolution=32,
             command=self._update_click_area, variable=self.state['zoomin_params']['target_size']
         )
         self.click_update_size_slider.pack(padx=10)
@@ -278,7 +278,7 @@ class ISegApp(ttk.Frame):
                 self.controller.set_image(image)
                 self.save_mask_btn.configure(state=tk.NORMAL)
                 self.load_mask_btn.configure(state=tk.NORMAL)
-                max_click_area = min(min(image.shape[:2]), 512)
+                max_click_area = min(min(image.shape[:2]), 1992)
                 self.click_update_size_slider.destroy()
                 self.click_update_size_slider = FocusHorizontalScale(
                     self.click_update_size_frame, from_=32, to=max_click_area,
