@@ -363,15 +363,15 @@ def remove_small_objects_in_mask(mask, min_size):
     _, mask[:,:,0] = cv2.threshold(mask[:,:,0], 0.5, 1, cv2.THRESH_BINARY)
     inverse_mask = 1 - mask
 
-    labeled_regions_inverse = measure.label(inverse_mask, connectivity=1)
+    labeled_regions_inverse = measure.label(inverse_mask, connectivity=2)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        labeled_inverse_regions = morphology.remove_small_objects(labeled_regions_inverse, min_size=30)
+        labeled_inverse_regions = morphology.remove_small_objects(labeled_regions_inverse, min_size=25)
 
     mask[labeled_inverse_regions == 0] = 1
 
     labeled_regions = measure.label(mask[:,:,0], connectivity=2)
-    
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         labeled_regions = morphology.remove_small_objects(labeled_regions, min_size=min_size)
