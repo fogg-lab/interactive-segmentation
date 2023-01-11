@@ -232,10 +232,10 @@ def elastic_distortion(images, grid_width=None, grid_height=None, magnitude=8, r
         elif img.ndim == 3:
             extra_dim[i] = True
         if img.dtype != np.uint8:
-            max = np.max(img)
-            dtype = np.uint8 if max <= 255 else np.uint16
-            img = img*255 if max == 1 else img
-            img = img.astype(dtype)
+            img_max = np.max(img)
+            img_dtype = np.uint8 if img_max <= 255 else np.uint16
+            img = img*255 if img_max == 1 else img
+            img = img.astype(img_dtype)
         mode = "L" if img.dtype == np.uint8 else "I"
         images[i] = Image.fromarray(np.squeeze(img), mode = mode)
 
