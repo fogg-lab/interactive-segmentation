@@ -188,6 +188,10 @@ def custom_transform(image, mask, transform_list):
     for t in transform_list:
         if t[0] in ("elastic_distortion", "elastic_distort"):
             image, mask = elastic_distortion([image, mask], *t[1])
+            # restore the threshold
+            mask_max = np.max(mask)
+            mask[mask>mask_max/2.6]=mask_max
+            mask[mask<mask_max]=0
         elif t[0] in ("random_square_crop", "rand_square_crop"):
             image, mask = rand_square_crop(image, mask, *t[1])
         elif t[0] in ("remove_small_objects", "remove_small_objects_in_mask"):
