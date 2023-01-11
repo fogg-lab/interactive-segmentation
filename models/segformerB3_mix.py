@@ -14,7 +14,6 @@ from isegm.data.compose import ProportionalComposeDataset
 from isegm.engine.focalclick_trainer import ISTrainer
 
 MODEL_NAME = 'segformerB3_tubes'
-min_object_area = 50
 
 def main(cfg):
     model, model_cfg = init_model(cfg)
@@ -53,7 +52,7 @@ def train(model, cfg, model_cfg):
     loss_cfg.trimap_loss = torch.nn.BCEWithLogitsLoss()
     loss_cfg.trimap_loss_weight = 1.0
 
-    min_object_area = 150
+    min_object_area = 50
 
     points_sampler = MultiPointSampler(model_cfg.num_max_points, prob_gamma=0.80,
                                        merge_objects_prob=0.15,
