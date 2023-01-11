@@ -14,7 +14,7 @@ from isegm.data.compose import ProportionalComposeDataset
 from isegm.engine.focalclick_trainer import ISTrainer
 
 MODEL_NAME = 'segformerB3_tubes'
-min_object_area = 150
+min_object_area = 50
 
 def main(cfg):
     model, model_cfg = init_model(cfg)
