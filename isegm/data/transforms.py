@@ -190,7 +190,7 @@ def custom_transform(image, mask, transform_list):
             image, mask = elastic_distortion([image, mask], *t[1])
             # restore the threshold
             mask_max = np.max(mask)
-            mask[mask>mask_max/2.6]=mask_max
+            mask[mask>mask_max/3]=mask_max
             mask[mask<mask_max]=0
         elif t[0] in ("random_square_crop", "rand_square_crop"):
             image, mask = rand_square_crop(image, mask, *t[1])
