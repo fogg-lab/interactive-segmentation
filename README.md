@@ -1,6 +1,6 @@
 # Interactive Semantic Segmentation
 
-Built on top of the following repositories:  
+Built on top of the following repositories:
 - https://github.com/XavierCHEN34/ClickSEG
 - https://github.com/saic-vul/ritm_interactive_segmentation
 
@@ -9,6 +9,8 @@ The labeling application runs on Linux, Windows, and Mac.
 ## Labeling application setup  
 ### Prerequisites
 If you pick installation option 2, first install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html). During the installation process for Miniconda (or Anaconda), check the box to add conda to your `path` environmental variable.
+
+For more info on training models for interactive segmentation, see [ClickSeg](https://github.com/XavierCHEN34/ClickSEG) and [RITM](https://github.com/saic-vul/ritm_interactive_segmentation).
 
 ### Installation Option 1 (Automatic)
 1. Clone this repository, or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder. Make sure the folder you extract it to contains no spaces or the install script will fail (the reason for this is that for launching the Miniconda installer from the command line, the /D option doesn't allow any spaces).  
@@ -43,7 +45,7 @@ Right-click on the project folder (the folder that contains `environment.yml` an
 
 #
 4. Download a checkpoint file (.pth) for a trained interactive segmentation model, and move it into the checkpoints folder (e.g. `/Users/username/interactive-segmentation/checkpoints/`).  
-You can download a trained model (trained for endothelial tube network segmentation) at [this link](https://drive.google.com/file/d/1JJZalxTMQFL9grnEBmHNQ37IezOhjDYZ/view?usp=share_link).
+You can download a trained model (trained for endothelial tube network segmentation) at [this link](https://drive.google.com/file/d/1qeWZfCpoehIIitGJL8YbD1TnM_fTDgUH/view?usp=share_link).
 <br></br>
 ### Usage
 1. (Launch using the launch script) Double click the appropriate launch script for your operating system, located in the `launch_scripts` directory.
