@@ -45,7 +45,7 @@ Right-click on the project folder (the folder that contains `environment.yml` an
 
 #
 4. Download a checkpoint file (.pth) for a trained interactive segmentation model, and move it into the checkpoints folder (e.g. `/Users/username/interactive-segmentation/checkpoints/`).  
-You can download a trained model (trained for endothelial tube network segmentation) at [this link](https://drive.google.com/file/d/1FL4KHsk4zUetFnAeVdwRqB5KHMth4cCx/view?usp=share_link).
+You can download a model that was trained for segmenting microvessels in tissue models at [this link](https://drive.google.com/file/d/1FL4KHsk4zUetFnAeVdwRqB5KHMth4cCx/view?usp=share_link).
 <br></br>
 ### Usage
 1. (Launch using the launch script) Double click the appropriate launch script for your operating system, located in the `launch_scripts` directory.
