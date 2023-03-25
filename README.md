@@ -82,6 +82,6 @@ From the terminal or command prompt, activate the Conda environment, navigate to
 
 
 ## Training a segmentation model
-For now, please see the documentation for these other repositories for more information:
+Refer to the documentation in these other repositories:
 - https://github.com/XavierCHEN34/ClickSEG
 - https://github.com/saic-vul/ritm_interactive_segmentation
