@@ -8,7 +8,7 @@ The labeling application runs on Linux, Windows, and Mac.
 <br></br>
 ## Labeling application setup  
 ### Prerequisites
-If you use installation option 2, first install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html). During the installation process for Miniconda (or Anaconda), check the box to add conda to your `path` environmental variable.
+For installation option 2, first install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html). During the installation process for Miniconda (or Anaconda), check the box to add conda to your `path` environmental variable.
 
 For more info on training models for interactive segmentation, see [ClickSeg](https://github.com/XavierCHEN34/ClickSEG) and [RITM](https://github.com/saic-vul/ritm_interactive_segmentation).
 
