@@ -19,7 +19,7 @@ For more info on training models for interactive segmentation, see [ClickSeg](ht
 >     - Right-click on the project folder and copy the path  
 >     - Open a terminal and navigate to the project folder by entering `cd <path to project folder>`, for example:  
 >       `cd /home/user/interactive-segmentation`  
->     - In the terminal, enter a command to add the execute permission to the install and launch scripts, for example:  
+>   - In the terminal, enter a command to add the execute permission to the install and launch scripts, for example:  
 >       `chmod u+x install_scripts/iseg-mac-installer.command && chmod u+x launch_scripts/iseg-mac-launcher.command`
 #
 2. Double click on the installation script for your operating system to install the labeling application:  
