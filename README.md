@@ -48,7 +48,7 @@ Right-click on the project folder (the folder that contains `environment.yml` an
 You can download a model that was trained for segmenting microvessels in tissue models at [this link](https://drive.google.com/file/d/1FL4KHsk4zUetFnAeVdwRqB5KHMth4cCx/view?usp=share_link).
 <br></br>
 ### Usage
-1. (Launch using the launch script) Double click the appropriate launch script for your operating system, located in the `launch_scripts` directory.
+1. (Launch using the launch script) Launch the script for your operating system, located in the `launch_scripts` directory.
 
 &nbsp;&nbsp;&nbsp;&nbsp;OR
 
