@@ -8,7 +8,7 @@ The labeling application runs on Linux, Windows, and Mac.
 <br></br>
 ## Labeling application setup  
 ### Prerequisites
-If you pick installation option 2, first install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html). During the installation process for Miniconda (or Anaconda), check the box to add conda to your `path` environmental variable.
+If you use installation option 2, first install a Conda distribution like [Miniconda](https://docs.conda.io/en/latest/miniconda.html). During the installation process for Miniconda (or Anaconda), check the box to add conda to your `path` environmental variable.
 
 For more info on training models for interactive segmentation, see [ClickSeg](https://github.com/XavierCHEN34/ClickSEG) and [RITM](https://github.com/saic-vul/ritm_interactive_segmentation).
 
@@ -22,10 +22,10 @@ For more info on training models for interactive segmentation, see [ClickSeg](ht
 >   - In the terminal, enter a command to add the execute permission to the install and launch scripts, for example:  
 >       `chmod u+x install_scripts/iseg-mac-installer.command && chmod u+x launch_scripts/iseg-mac-launcher.command`
 #
-2. Double click on the installation script for your operating system to install the labeling application:  
+2. Run the installation script for your operating system to install the labeling application:  
     - Windows: `install_scripts/iseg-windows-installer.bat` (if you get a security warning, click `More info` and then `Run anyway`)  
     - Mac: `install_scripts/iseg-mac-installer.command`  
-    - Linux: `install_scripts/install_iseg.sh` (right click->open with->terminal)
+    - Linux: `install_scripts/install_iseg.sh`
 
 ### Installation Option 2 (Manual)
 1. Clone this repository, or download and extract [the zip file](https://github.com/fogg-lab/interactive-segmentation/archive/refs/heads/main.zip) to a folder.  
