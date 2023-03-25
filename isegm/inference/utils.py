@@ -1,5 +1,7 @@
 from datetime import timedelta
 from pathlib import Path
+from pickle import UnpicklingError
+import traceback
 
 import torch
 import numpy as np
@@ -20,7 +22,14 @@ def get_time_metrics(all_ious, elapsed_time):
 
 def load_is_model(checkpoint, device, **kwargs):
     if isinstance(checkpoint, (str, Path)):
-        state_dict = torch.load(checkpoint, map_location='cpu')
+        try:
+            state_dict = torch.load(checkpoint, map_location='cpu')
+        except UnpicklingError as e:
+            traceback.print_exc()
+            print("\nFailed to load checkpoint.")
+            print("If you followed the manual installation instructions, refer to "
+                  "step 4 (\"4. Download a checkpoint file\" in README.md)")
+            exit(1)
     else:
         state_dict = checkpoint
 
